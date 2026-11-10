@@ -1,6 +1,14 @@
 import SwiftUI
 
-private enum CalendarMode: String, CaseIterable { case year = "Year", month = "Month", day = "Day" }
+private enum CalendarMode: String, CaseIterable {
+    case year = "Year", month = "Month", day = "Day"
+}
+
+private struct CalendarEditorSelection: Identifiable {
+    let id = UUID()
+    let event: CalendarEvent?
+    let draft: CalendarEvent?
+}
 
 struct CalendarView: View {
     @Bindable var store: EventStore
@@ -8,211 +16,380 @@ struct CalendarView: View {
     @AppStorage("accentColor") private var accentKey = "red"
     @AppStorage("compactCalendar") private var compact = false
     @AppStorage("secondaryCalendar") private var secondaryCalendar = "none"
-    @State private var appearance = false
-    @State private var discover = false
-    @State private var publishEvent = false
-    @State private var calendarSystems = false
-    private var accent: Color { CalendarAppearance.accent(accentKey) }
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selected = Date()
     @State private var mode = CalendarMode.month
+    @State private var appearance = false
+    @State private var calendarSystems = false
     @State private var alarms = false
-    @State private var editor = false
-    @State private var editing: CalendarEvent?
-    @State private var search = ""
     @State private var searching = false
+    @State private var publishEvent = false
+    @State private var editor: CalendarEditorSelection?
     private let calendar = Calendar.current
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 3), count: 7)
+    private var accent: Color { CalendarAppearance.accent(accentKey) }
+    private var palette: LaunchPalette { LaunchAppearance.palette }
+    private var selectedEvents: [CalendarEvent] { store.events(on: selected) }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                header
+                dateHeader
+                Picker("Calendar view", selection: $mode) {
+                    ForEach(CalendarMode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, 20)
+                .padding(.bottom, verticalSizeClass == .compact ? 8 : 12)
+                .frame(maxWidth: 1100)
+                .frame(maxWidth: .infinity)
+
                 switch mode {
                 case .year: yearView
                 case .month: monthView
                 case .day: dayView
                 }
             }
-            .background(LaunchAppearance.palette.background)
-            .safeAreaInset(edge: .bottom) { bottomBar }
-            .toolbar(.hidden, for: .navigationBar)
+            .calendarTheme()
+            .navigationTitle("Calendar")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Today") { select(Date()) }.font(.subheadline.weight(.semibold))
+                }
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button("Search events", systemImage: "magnifyingglass") { searching = true }
+                    optionsMenu
+                    Button("New event", systemImage: "plus") { createEvent() }
+                        .fontWeight(.semibold)
+                }
+            }
             .sheet(isPresented: $searching) { EventSearchView(store: store) }
             .sheet(isPresented: $publishEvent) { PublicEventComposer(store: store) }
-            .sheet(isPresented: $discover) { PublicEventsView(store: store) }
             .sheet(isPresented: $appearance) { AppearanceView() }
             .sheet(isPresented: $calendarSystems) { CalendarSystemsView() }
             .sheet(isPresented: $alarms) { AlarmsView() }
-            .sheet(isPresented: $editor) { EventEditor(store: store, date: selected, event: editing) }
-            .alert("Couldn’t save changes", isPresented: Binding(get: { store.errorMessage != nil }, set: { if !$0 { store.errorMessage = nil } })) {
+            .sheet(item: $editor) { selection in
+                EventEditor(store: store, date: selected, event: selection.event, draft: selection.draft)
+                    .id(selection.id)
+            }
+            .alert("Calendar notice", isPresented: Binding(get: { store.errorMessage != nil }, set: { if !$0 { store.errorMessage = nil } })) {
                 Button("OK") { store.errorMessage = nil }
             } message: { Text(store.errorMessage ?? "") }
         }
     }
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            HStack {
-                Label("On this device", systemImage: "internaldrive")
-                    .font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
-                Spacer()
-                Menu {
-                    Button("Create public event", systemImage: "globe.badge.chevron.backward") { publishEvent = true }
-                    Button("Discover public events", systemImage: "globe") { discover = true }
-                    Button("Appearance", systemImage: "paintpalette") { appearance = true }
-                    Button("Calendar systems", systemImage: "moonphase.waning.crescent") { calendarSystems = true }
-                } label: { Image(systemName: "slider.horizontal.3").frame(width: 36, height: 40) }
-                Button { alarms = true } label: { Image(systemName: "alarm").frame(width: 40, height: 40) }.accessibilityLabel("Clocks and alarms")
-                Button { searching.toggle() } label: { Image(systemName: "magnifyingglass").frame(width: 40, height: 40) }
-                    .accessibilityLabel("Search events")
-                Button { editing = nil; editor = true } label: { Image(systemName: "plus").font(.title2).frame(width: 40, height: 40) }
-                    .accessibilityLabel("Add event")
-            }
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(selected.formatted(.dateTime.year())).font(.subheadline).foregroundStyle(accent)
-                    if let secondary = CalendarSystems.label(for: selected, system: secondaryCalendar) {
-                        Text(secondary).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
-                    }
-                    Text(mode == .year ? "Your year" : selected.formatted(.dateTime.month(.wide)))
-                        .font(.system(size: 38, weight: .bold, design: .rounded))
-                }
-                Spacer()
-                Button { move(-1) } label: { Image(systemName: "chevron.left").padding(10) }.accessibilityLabel("Previous")
-                Button { move(1) } label: { Image(systemName: "chevron.right").padding(10) }.accessibilityLabel("Next")
-            }
-            Picker("Calendar view", selection: $mode) {
-                ForEach(CalendarMode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
-            }.pickerStyle(.segmented)
-        }.padding(20)
+    private var optionsMenu: some View {
+        Menu("Calendar options", systemImage: "ellipsis") {
+            Button("Appearance & effects", systemImage: "paintpalette") { appearance = true }
+            Button("Clocks & alarms", systemImage: "alarm") { alarms = true }
+            Button("Calendar systems", systemImage: "moonphase.waning.crescent") { calendarSystems = true }
+            Divider()
+            Button("Create public event", systemImage: "globe") { publishEvent = true }
+        }
     }
 
-    private var yearView: some View {
-        ScrollView {
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 18), count: 3), spacing: 28) {
-                ForEach(1...12, id: \.self) { month in
-                    let date = calendar.date(from: DateComponents(year: calendar.component(.year, from: selected), month: month, day: 1))!
-                    Button { selected = date; mode = .month } label: {
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text(date.formatted(.dateTime.month(.abbreviated))).font(.headline).foregroundStyle(accent)
-                            LazyVGrid(columns: columns, spacing: 6) {
-                                ForEach(Array(days(in: date).enumerated()), id: \.offset) { _, day in
-                                    Text(day.map { String(calendar.component(.day, from: $0)) } ?? " ")
-                                        .font(.system(size: 9, weight: .medium)).frame(maxWidth: .infinity)
-                                        .foregroundStyle(day.map { calendar.isDateInToday($0) } == true ? accent : .primary)
-                                }
-                            }
-                        }.frame(height: 135, alignment: .top)
-                    }.buttonStyle(.plain)
+    private var dateHeader: some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(mode == .year ? selected.formatted(.dateTime.year()) : selected.formatted(.dateTime.month(.wide)))
+                        .font(.system(.title, design: .rounded, weight: .bold))
+                        .foregroundStyle(palette.foreground)
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                    if mode != .year {
+                        Text(selected.formatted(.dateTime.year()))
+                            .font(.title3).foregroundStyle(palette.secondary)
+                            .lineLimit(1).minimumScaleFactor(0.8)
+                    }
                 }
-            }.padding(20)
+                if let secondary = CalendarSystems.label(for: selected, system: secondaryCalendar) {
+                    Text(secondary).font(.caption).foregroundStyle(palette.secondary).lineLimit(1)
+                }
+            }
+            Spacer(minLength: 0)
+            HStack(spacing: 0) {
+                Button { move(-1) } label: { Image(systemName: "chevron.left").frame(width: 44, height: 44) }
+                    .accessibilityLabel("Previous \(mode.rawValue.lowercased())")
+                Button { move(1) } label: { Image(systemName: "chevron.right").frame(width: 44, height: 44) }
+                    .accessibilityLabel("Next \(mode.rawValue.lowercased())")
+            }
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(palette.foreground)
+            .background(palette.surface, in: Capsule())
         }
+        .padding(.horizontal, 20).padding(.top, 8).padding(.bottom, 12)
+        .frame(maxWidth: 1100).frame(maxWidth: .infinity)
     }
 
     private var monthView: some View {
         ScrollView {
-            VStack(spacing: 0) {
-                weekdayLabels
-                LazyVGrid(columns: columns, spacing: 0) {
-                    ForEach(Array(days(in: selected).enumerated()), id: \.offset) { _, date in
-                        if let date {
-                            Button { selected = date; mode = .day } label: {
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text(String(calendar.component(.day, from: date)))
-                                        .font(.system(size: 19, weight: .medium))
-                                        .frame(width: 34, height: 34)
-                                        .background(calendar.isDateInToday(date) ? accent : Color.clear, in: Circle())
-                                    ForEach(store.events(on: date).prefix(3)) { event in
-                                        Text(event.title).font(.system(size: 9, weight: .semibold))
-                                            .lineLimit(1).padding(.horizontal, 3).padding(.vertical, 3)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                            .foregroundStyle(event.color.tint)
-                                            .background(event.color.tint.opacity(0.18), in: RoundedRectangle(cornerRadius: 4))
-                                    }
-                                    Spacer(minLength: 0)
-                                }
-                                .frame(maxWidth: .infinity, minHeight: compact ? 82 : 110, maxHeight: compact ? 82 : 110, alignment: .topLeading)
-                                .padding(.top, 9)
-                                .overlay(alignment: .top) { Rectangle().fill(.primary.opacity(0.15)).frame(height: 0.5) }
-                            }.buttonStyle(.plain)
-                        } else { Color.clear.frame(height: compact ? 82 : 110) }
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .top, spacing: 24) {
+                    monthCard.frame(minWidth: 340, maxWidth: .infinity)
+                    agenda.frame(minWidth: 320, maxWidth: .infinity)
+                }
+                VStack(spacing: 24) {
+                    monthCard
+                    agenda
+                }
+            }
+            .padding(.horizontal, 20).padding(.bottom, 28)
+            .frame(maxWidth: 1100)
+            .frame(maxWidth: .infinity)
+        }
+        .scrollIndicators(.hidden)
+    }
+
+    private var monthCard: some View {
+        VStack(spacing: 8) {
+            weekdayLabels
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 0), count: 7), spacing: compact ? 0 : 2) {
+                ForEach(monthDates(for: selected), id: \.self) { date in
+                    let events = store.events(on: date)
+                    CalendarDateButton(date: date, selected: selected, events: events, inCurrentMonth: calendar.isDate(date, equalTo: selected, toGranularity: .month), compact: compact, accent: accent) {
+                        select(date)
                     }
                 }
-                if store.events(on: selected).isEmpty {
-                    Text("Room for something good.").foregroundStyle(LaunchAppearance.palette.secondary).padding(.top, 28)
-                }
-            }.padding(.horizontal, 12)
+            }
         }
+        .padding(.horizontal, 8).padding(.top, 12).padding(.bottom, 10)
+        .background(palette.surface, in: RoundedRectangle(cornerRadius: 24))
     }
 
     private var weekdayLabels: some View {
         HStack(spacing: 0) {
             ForEach(0..<7) { index in
                 let symbol = calendar.veryShortStandaloneWeekdaySymbols[(calendar.firstWeekday - 1 + index) % 7]
-                Text(symbol).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary).frame(maxWidth: .infinity)
+                Text(symbol).font(.caption.weight(.semibold))
+                    .foregroundStyle(palette.secondary).frame(maxWidth: .infinity)
             }
-        }.padding(.vertical, 12)
+        }.padding(.bottom, 2)
+    }
+
+    private var agenda: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(calendar.isDateInToday(selected) ? "Today’s schedule" : selected.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()))
+                        .font(.title3.bold()).foregroundStyle(palette.foreground)
+                    Text(selectedEvents.isEmpty ? "No events planned" : "\(selectedEvents.count) \(selectedEvents.count == 1 ? "event" : "events") planned")
+                        .font(.subheadline).foregroundStyle(palette.secondary)
+                }
+                Spacer(minLength: 4)
+                Button { mode = .day } label: {
+                    Image(systemName: "clock").font(.body.weight(.medium)).frame(width: 44, height: 44)
+                        .background(palette.surface, in: Circle())
+                }.accessibilityLabel("Open day timeline")
+            }
+            if selectedEvents.isEmpty { emptyAgenda }
+            else {
+                LazyVStack(spacing: 10) {
+                    ForEach(selectedEvents) { event in
+                        CalendarAgendaRow(event: event, conflict: overlaps(event), date: selected) {
+                            editor = CalendarEditorSelection(event: event, draft: nil)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var emptyAgenda: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Image(systemName: "calendar.badge.plus").font(.title2).foregroundStyle(accent)
+            Text("Plan something for this day").font(.headline).foregroundStyle(palette.foreground)
+            Text("Events and reminders will appear here.")
+                .font(.subheadline).foregroundStyle(palette.secondary)
+            Button("Add an event", systemImage: "plus") { createEvent() }
+                .font(.subheadline.weight(.semibold)).buttonStyle(.bordered)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading).padding(20)
+        .background(palette.surface, in: RoundedRectangle(cornerRadius: 20))
+    }
+
+    private var yearView: some View {
+        ScrollView {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: sizeClass == .regular ? 3 : 2), spacing: 14) {
+                ForEach(1...12, id: \.self) { month in
+                    let date = calendar.date(from: DateComponents(year: calendar.component(.year, from: selected), month: month, day: 1))!
+                    Button { selected = date; mode = .month } label: {
+                        miniMonth(date)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(date.formatted(.dateTime.month(.wide).year()))
+                    .accessibilityHint("Open month")
+                }
+            }
+            .padding(.horizontal, 20).padding(.bottom, 24)
+            .frame(maxWidth: 900).frame(maxWidth: .infinity)
+        }.scrollIndicators(.hidden)
+    }
+
+    private func miniMonth(_ date: Date) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text(date.formatted(.dateTime.month(.abbreviated))).font(.headline)
+                Spacer(minLength: 0)
+                if calendar.isDate(date, equalTo: Date(), toGranularity: .month) {
+                    Circle().fill(accent).frame(width: 6, height: 6)
+                }
+            }.foregroundStyle(palette.foreground)
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 0), count: 7), spacing: 5) {
+                ForEach(monthDates(for: date), id: \.self) { day in
+                    Text(calendar.isDate(day, equalTo: date, toGranularity: .month) ? String(calendar.component(.day, from: day)) : " ")
+                        .font(.system(size: 11, weight: calendar.isDateInToday(day) ? .bold : .regular))
+                        .foregroundStyle(calendar.isDateInToday(day) ? accent : palette.secondary)
+                        .frame(maxWidth: .infinity, minHeight: 14)
+                }
+            }.accessibilityHidden(true)
+            Spacer(minLength: 0)
+        }
+        .padding(14).frame(height: 172, alignment: .top)
+        .background(palette.surface, in: RoundedRectangle(cornerRadius: 20))
     }
 
     private var dayView: some View {
-        VStack(spacing: 0) {
-            Text(selected.formatted(.dateTime.weekday(.wide).day().month(.abbreviated)))
-                .font(.headline).padding(.bottom, 14)
-            DayTimeline(events: store.events(on: selected), date: selected) { event in
-                editing = event
-                editor = true
+        VStack(spacing: 14) {
+            HStack(spacing: 0) {
+                ForEach(weekDates, id: \.self) { date in
+                    Button { select(date) } label: {
+                        VStack(spacing: 6) {
+                            Text(date.formatted(.dateTime.weekday(.narrow)))
+                                .font(.caption2.weight(.medium)).foregroundStyle(palette.secondary)
+                            Text(String(calendar.component(.day, from: date)))
+                                .font(.body.weight(.semibold)).frame(width: 36, height: 36)
+                                .foregroundStyle(calendar.isDate(date, inSameDayAs: selected) ? LaunchAppearance.accentForeground : palette.foreground)
+                                .background(calendar.isDate(date, inSameDayAs: selected) ? accent : .clear, in: Circle())
+                        }.frame(maxWidth: .infinity, minHeight: 54)
+                    }.buttonStyle(.plain)
+                        .accessibilityLabel(date.formatted(date: .complete, time: .omitted))
+                }
+            }.padding(.horizontal, 20)
+            DayTimeline(events: selectedEvents, date: selected) { event in
+                editor = CalendarEditorSelection(event: event, draft: nil)
             }
         }
     }
 
-    private func eventButton(_ event: CalendarEvent) -> some View {
-        Button { editing = event; editor = true } label: {
-            HStack(alignment: .top) {
-                RoundedRectangle(cornerRadius: 2).fill(event.color.tint).frame(width: 3)
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(event.title).font(.headline)
-                    Text(event.isAllDay ? "All day" : "\(event.start.formatted(date: .omitted, time: .shortened)) – \(event.end.formatted(date: .omitted, time: .shortened))")
-                        .font(.caption)
-                    if !event.location.isEmpty { Label(event.location, systemImage: "location").font(.caption) }
-                }
-                Spacer(minLength: 0)
-            }.padding(10).foregroundStyle(event.color.tint)
-                .background(event.color.tint.opacity(0.18), in: RoundedRectangle(cornerRadius: 10))
-        }.buttonStyle(.plain)
+    private var weekDates: [Date] {
+        let start = calendar.dateInterval(of: .weekOfYear, for: selected)!.start
+        return (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: start) }
     }
 
-    private var searchResults: some View {
-        ScrollView {
-            LazyVStack(spacing: 10) {
-                ForEach(store.activeEvents.filter { $0.title.localizedCaseInsensitiveContains(search) || $0.notes.localizedCaseInsensitiveContains(search) }.sorted { $0.start < $1.start }) { event in
-                    VStack(alignment: .leading) {
-                        Text(event.start.formatted(date: .abbreviated, time: .omitted)).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
-                        eventButton(event)
-                    }
-                }
-            }.padding()
-        }
-    }
-
-    private var bottomBar: some View {
-        HStack {
-            Button("Today") { selected = Date(); searching = false }.font(.headline)
-            Spacer()
-            Text("sstincky calander").font(.caption.weight(.semibold)).foregroundStyle(LaunchAppearance.palette.secondary)
-            Spacer()
-            Button { editing = nil; editor = true } label: { Label("Create event", systemImage: "plus.circle.fill") }.font(.headline)
-        }.padding(.horizontal, 24).padding(.vertical, 16).background(.ultraThinMaterial, in: Capsule()).padding(.horizontal, 18).padding(.bottom, 8)
-    }
-
-    private func move(_ value: Int) {
-        selected = calendar.date(byAdding: mode == .year ? .year : mode == .month ? .month : .day, value: value, to: selected) ?? selected
-    }
-    private func displayHour(_ event: CalendarEvent) -> Int {
-        calendar.isDate(event.start, inSameDayAs: selected) ? calendar.component(.hour, from: event.start) : 0
-    }
-    private func days(in date: Date) -> [Date?] {
+    private func monthDates(for date: Date) -> [Date] {
         let start = calendar.dateInterval(of: .month, for: date)!.start
         let offset = (calendar.component(.weekday, from: start) - calendar.firstWeekday + 7) % 7
         let count = calendar.range(of: .day, in: .month, for: date)!.count
-        return Array(repeating: nil, count: offset) + (0..<count).map { calendar.date(byAdding: .day, value: $0, to: start) }
+        let slots = ((offset + count + 6) / 7) * 7
+        return (0..<slots).compactMap { calendar.date(byAdding: .day, value: $0 - offset, to: start) }
+    }
+
+    private func overlaps(_ event: CalendarEvent) -> Bool {
+        !event.isAllDay && selectedEvents.contains { other in
+            other.id != event.id && !other.isAllDay && other.start < event.end && other.end > event.start
+        }
+    }
+
+    private func move(_ value: Int) {
+        let unit: Calendar.Component = mode == .year ? .year : mode == .month ? .month : .day
+        if let date = calendar.date(byAdding: unit, value: value, to: selected) { select(date) }
+    }
+
+    private func select(_ date: Date) {
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.18)) { selected = date }
+    }
+
+    private func createEvent() {
+        let start: Date
+        if calendar.isDateInToday(selected) {
+            let nextHour = Date().addingTimeInterval(3600)
+            start = calendar.date(bySetting: .minute, value: 0, of: nextHour) ?? nextHour
+        } else {
+            start = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: selected) ?? selected
+        }
+        let draft = CalendarEvent(title: "", start: start, end: start.addingTimeInterval(3600))
+        editor = CalendarEditorSelection(event: nil, draft: draft)
+    }
+}
+
+private struct CalendarDateButton: View {
+    let date: Date
+    let selected: Date
+    let events: [CalendarEvent]
+    let inCurrentMonth: Bool
+    let compact: Bool
+    let accent: Color
+    let action: () -> Void
+    private let calendar = Calendar.current
+    private var isSelected: Bool { calendar.isDate(date, inSameDayAs: selected) }
+    private var isToday: Bool { calendar.isDateInToday(date) }
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Text(String(calendar.component(.day, from: date)))
+                    .font(.body.weight(isSelected || isToday ? .bold : .medium))
+                    .foregroundStyle(isSelected ? LaunchAppearance.accentForeground : isToday ? accent : LaunchAppearance.palette.foreground.opacity(inCurrentMonth ? 1 : 0.3))
+                    .frame(width: 34, height: 34)
+                    .background(isSelected ? accent : .clear, in: Circle())
+                    .overlay { Circle().stroke(isToday && !isSelected ? accent.opacity(0.6) : .clear, lineWidth: 1.5) }
+                HStack(spacing: 3) {
+                    ForEach(Array(events.prefix(3).enumerated()), id: \.offset) { _, event in
+                        Circle().fill(isSelected ? accent : event.color.tint).frame(width: 4, height: 4)
+                    }
+                }.frame(height: 4)
+            }
+            .frame(maxWidth: .infinity, minHeight: compact ? 44 : 48)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .accessibilityLabel(date.formatted(date: .complete, time: .omitted) + ", \(events.count) events")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityHint("Show this day’s schedule")
+    }
+}
+
+private struct CalendarAgendaRow: View {
+    let event: CalendarEvent
+    let conflict: Bool
+    let date: Date
+    let action: () -> Void
+    private var palette: LaunchPalette { LaunchAppearance.palette }
+
+    var body: some View {
+        Button(action: action) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(event.isAllDay ? "All day" : event.start.formatted(date: .omitted, time: .shortened))
+                        .font(.subheadline.weight(.semibold)).foregroundStyle(palette.foreground)
+                    if !event.isAllDay {
+                        Text(event.end.formatted(date: .omitted, time: .shortened))
+                            .font(.caption).foregroundStyle(palette.secondary)
+                    }
+                }.monospacedDigit().frame(width: 62, alignment: .leading)
+                RoundedRectangle(cornerRadius: 2).fill(event.color.tint).frame(width: 3)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(event.title).font(.body.weight(.semibold)).foregroundStyle(palette.foreground)
+                        .multilineTextAlignment(.leading).lineLimit(2)
+                    if !event.location.isEmpty {
+                        Label(event.location, systemImage: "location").font(.caption).foregroundStyle(palette.secondary).lineLimit(1)
+                    }
+                    HStack(spacing: 10) {
+                        if event.recurrence != nil { Image(systemName: "repeat").accessibilityLabel("Repeating event") }
+                        if event.reminderMinutes != nil { Image(systemName: "bell").accessibilityLabel("Reminder set") }
+                        if conflict { Label("Overlaps", systemImage: "exclamationmark.circle").foregroundStyle(palette.danger) }
+                    }.font(.caption)
+                }.frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "chevron.right").font(.caption2.weight(.semibold))
+                    .foregroundStyle(palette.secondary).padding(.top, 4)
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(16).frame(maxWidth: .infinity, alignment: .leading)
+            .background(palette.surface, in: RoundedRectangle(cornerRadius: 18))
+            .contentShape(RoundedRectangle(cornerRadius: 18))
+        }.buttonStyle(.plain)
     }
 }

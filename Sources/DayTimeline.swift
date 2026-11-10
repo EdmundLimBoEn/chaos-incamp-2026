@@ -4,69 +4,158 @@ struct DayTimeline: View {
     let events: [CalendarEvent]
     let date: Date
     let edit: (CalendarEvent) -> Void
-    private let hourHeight: CGFloat = 80
-    private let gutter: CGFloat = 52
+    @ScaledMetric(relativeTo: .body) private var hourHeight: CGFloat = 88
+    @ScaledMetric(relativeTo: .caption) private var gutter: CGFloat = 56
 
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                VStack(spacing: 8) {
-                    ForEach(events.filter(\.isAllDay)) { event in
-                        Button { edit(event) } label: {
-                            Text(event.title).font(.subheadline.bold()).frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(10).foregroundStyle(event.color.tint)
-                                .background(event.color.tint.opacity(0.2), in: RoundedRectangle(cornerRadius: 8))
-                        }.buttonStyle(.plain).padding(.leading, gutter)
-                    }
+                VStack(spacing: 16) {
+                    if !allDayEvents.isEmpty { allDaySection }
                     GeometryReader { geometry in
                         ZStack(alignment: .topLeading) {
-                            ForEach(0..<24) { hour in
-                                HStack(alignment: .top, spacing: 8) {
-                                    Text(String(format: "%02d:00", hour)).font(.caption.monospacedDigit())
-                                        .foregroundStyle(LaunchAppearance.palette.secondary).frame(width: gutter - 8)
-                                    Rectangle().fill(.primary.opacity(0.15)).frame(height: 0.5)
-                                }.offset(y: CGFloat(hour) * hourHeight).id(hour)
-                            }
+                            hourLines
                             ForEach(placements) { item in
                                 let width = max(1, (geometry.size.width - gutter) / CGFloat(item.columns))
-                                Button { edit(item.event) } label: {
-                                    VStack(alignment: .leading, spacing: 3) {
-                                        if item.conflict {
-                                            Label("Overlap", systemImage: "exclamationmark.triangle.fill")
-                                                .font(.system(size: 9, weight: .bold)).foregroundStyle(LaunchAppearance.palette.danger)
-                                        }
-                                        Text(item.event.title).font(.caption.bold()).lineLimit(2)
-                                        Text(item.event.start.formatted(date: .omitted, time: .shortened))
-                                            .font(.system(size: 10)).lineLimit(1)
-                                        Spacer(minLength: 0)
-                                    }.padding(6).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                                        .foregroundStyle(item.event.color.tint)
-                                        .background(item.event.color.tint.opacity(0.23), in: RoundedRectangle(cornerRadius: 7))
-                                        .overlay { RoundedRectangle(cornerRadius: 7).stroke(item.conflict ? LaunchAppearance.palette.danger : item.event.color.tint.opacity(0.5), lineWidth: item.conflict ? 2 : 1) }
-                                }.buttonStyle(.plain)
-                                    .frame(width: max(1, width - 4), height: max(18, CGFloat(item.end - item.start) / 60 * hourHeight - 2))
+                                let height = max(26, CGFloat(item.end - item.start) / 60 * hourHeight - 3)
+                                eventCard(item, height: height)
+                                    .frame(width: max(1, width - 5), height: height)
                                     .offset(x: gutter + CGFloat(item.column) * width, y: CGFloat(item.start) / 60 * hourHeight)
-                                    .accessibilityLabel(item.event.title + (item.conflict ? ", overlaps another event" : ""))
                             }
-                            if Calendar.current.isDateInToday(date) {
-                                TimelineView(.periodic(from: .now, by: 60)) { context in
-                                    let components = Calendar.current.dateComponents([.hour, .minute], from: context.date)
-                                    HStack(spacing: 0) {
-                                        Text(context.date.formatted(date: .omitted, time: .shortened)).font(.system(size: 9, weight: .bold))
-                                            .padding(3).background(LaunchAppearance.palette.danger, in: Capsule()).frame(width: gutter)
-                                        Rectangle().fill(LaunchAppearance.palette.danger).frame(height: 2)
-                                    }.offset(y: CGFloat((components.hour ?? 0) * 60 + (components.minute ?? 0)) / 60 * hourHeight)
-                                }.allowsHitTesting(false)
-                            }
+                            if Calendar.current.isDateInToday(date) { currentTimeLine }
                         }
-                    }.frame(height: hourHeight * 24)
-                }.padding(.horizontal, 12)
-            }.onAppear { proxy.scrollTo(8, anchor: .top) }
+                    }
+                    .frame(height: hourHeight * 24)
+                    .padding(.top, 8)
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 24)
+            }
+            .onAppear { proxy.scrollTo(initialHour, anchor: .top) }
+            .onChange(of: date) { _, _ in proxy.scrollTo(initialHour, anchor: .top) }
         }
     }
 
-    private var placements: [TimelinePlacement] {
-        TimelinePlacement.layout(events: events, date: date)
+    private var allDaySection: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Text("All day")
+                .font(.caption.weight(.medium))
+                .foregroundStyle(LaunchAppearance.palette.secondary)
+                .frame(width: gutter - 8, alignment: .trailing)
+                .padding(.top, 14)
+            VStack(spacing: 6) {
+                ForEach(allDayEvents) { event in
+                    Button { edit(event) } label: {
+                        HStack(spacing: 9) {
+                            Capsule().fill(event.color.tint).frame(width: 3, height: 22)
+                            Text(event.title).font(.subheadline.weight(.semibold)).lineLimit(2)
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.right").font(.caption2.weight(.semibold))
+                                .foregroundStyle(LaunchAppearance.palette.secondary)
+                        }
+                        .padding(.horizontal, 12)
+                        .frame(minHeight: 46)
+                        .foregroundStyle(LaunchAppearance.palette.foreground)
+                        .background(event.color.tint.opacity(0.13), in: RoundedRectangle(cornerRadius: 12))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(event.title + ", all day")
+                }
+            }
+        }
+    }
+
+    private var hourLines: some View {
+        ForEach(0..<24) { hour in
+            HStack(alignment: .top, spacing: 8) {
+                Text(String(format: "%02d:00", hour))
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(LaunchAppearance.palette.secondary)
+                    .frame(width: gutter - 8, alignment: .trailing)
+                    .offset(y: -7)
+                Rectangle()
+                    .fill(LaunchAppearance.palette.foreground.opacity(0.1))
+                    .frame(height: 0.5)
+            }
+            .offset(y: CGFloat(hour) * hourHeight)
+            .id(hour)
+        }
+    }
+
+    private func eventCard(_ item: TimelinePlacement, height: CGFloat) -> some View {
+        Button { edit(item.event) } label: {
+            HStack(alignment: .top, spacing: 7) {
+                Capsule().fill(item.event.color.tint).frame(width: 3)
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(item.event.title)
+                            .font(.caption.weight(.semibold))
+                            .lineLimit(height < 52 ? 1 : 2)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        if item.conflict {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .font(.caption)
+                                .foregroundStyle(LaunchAppearance.palette.danger)
+                                .accessibilityHidden(true)
+                        }
+                    }
+                    if height >= 60 {
+                        Text(item.event.start.formatted(date: .omitted, time: .shortened) + " – " + item.event.end.formatted(date: .omitted, time: .shortened))
+                            .font(.caption2)
+                            .foregroundStyle(LaunchAppearance.palette.secondary)
+                            .lineLimit(1)
+                    }
+                    if height >= 100 && !item.event.location.isEmpty {
+                        Label(item.event.location, systemImage: "location")
+                            .font(.caption2)
+                            .foregroundStyle(LaunchAppearance.palette.secondary)
+                            .lineLimit(2)
+                    }
+                    Spacer(minLength: 0)
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, height < 40 ? 5 : 9)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .foregroundStyle(LaunchAppearance.palette.foreground)
+            .background(item.event.color.tint.opacity(0.16), in: RoundedRectangle(cornerRadius: 10))
+            .overlay {
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(item.conflict ? LaunchAppearance.palette.danger : item.event.color.tint.opacity(0.3), lineWidth: item.conflict ? 1.5 : 0.5)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(item.event.title + ", " + item.event.start.formatted(date: .omitted, time: .shortened) + " to " + item.event.end.formatted(date: .omitted, time: .shortened) + (item.conflict ? ", overlaps another event" : ""))
+        .accessibilityHint("Edit event")
+    }
+
+    private var currentTimeLine: some View {
+        TimelineView(.periodic(from: .now, by: 60)) { context in
+            let components = Calendar.current.dateComponents([.hour, .minute], from: context.date)
+            HStack(spacing: 0) {
+                Text(context.date.formatted(date: .omitted, time: .shortened))
+                    .font(.caption2.weight(.semibold).monospacedDigit())
+                    .padding(.horizontal, 4).padding(.vertical, 3)
+                    .background(LaunchAppearance.palette.background, in: Capsule())
+                    .foregroundStyle(LaunchAppearance.palette.danger)
+                    .frame(width: gutter)
+                Circle().fill(LaunchAppearance.palette.danger).frame(width: 6, height: 6)
+                Rectangle().fill(LaunchAppearance.palette.danger).frame(height: 1)
+            }
+            .offset(y: CGFloat((components.hour ?? 0) * 60 + (components.minute ?? 0)) / 60 * hourHeight - 8)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    private var allDayEvents: [CalendarEvent] { events.filter(\.isAllDay) }
+    private var placements: [TimelinePlacement] { TimelinePlacement.layout(events: events, date: date) }
+    private var initialHour: Int {
+        if Calendar.current.isDateInToday(date) {
+            return max(0, Calendar.current.component(.hour, from: Date()) - 1)
+        }
+        return max(0, Int((placements.first?.start ?? 540) / 60) - 1)
     }
 }
 

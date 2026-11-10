@@ -65,6 +65,18 @@ enum LaunchAppearance {
         defaults.set(defaults.integer(forKey: "paletteRevision") + 1, forKey: "paletteRevision")
     }
 
+    static var accentForeground: Color {
+        let accent = CalendarAppearance.accent(UserDefaults.standard.string(forKey: "accentColor") ?? "red")
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+        UIColor(accent).getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        func linear(_ value: CGFloat) -> Double {
+            let value = Double(value)
+            return value <= 0.04045 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
+        }
+        let luminance = 0.2126 * linear(red) + 0.7152 * linear(green) + 0.0722 * linear(blue)
+        return luminance > 0.179 ? .black : .white
+    }
+
     static var palette: LaunchPalette {
         LaunchPalette(
             background: color("background", fallback: Color(uiColor: .systemBackground)),
