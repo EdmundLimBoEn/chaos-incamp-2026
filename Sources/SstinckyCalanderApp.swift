@@ -8,6 +8,7 @@ struct SstinckyCalanderApp: App {
             CalendarView(store: store)
                 .preferredColorScheme(.dark)
                 .tint(.red)
+                .task { ReminderScheduler.shared.configure(); store.refreshReminders() }
         }
     }
 }

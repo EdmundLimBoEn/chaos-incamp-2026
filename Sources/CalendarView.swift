@@ -6,6 +6,7 @@ struct CalendarView: View {
     @Bindable var store: EventStore
     @State private var selected = Date()
     @State private var mode = CalendarMode.month
+    @State private var alarms = false
     @State private var editor = false
     @State private var editing: CalendarEvent?
     @State private var search = ""
@@ -33,6 +34,7 @@ struct CalendarView: View {
             .background(Color.black)
             .safeAreaInset(edge: .bottom) { bottomBar }
             .toolbar(.hidden, for: .navigationBar)
+            .sheet(isPresented: $alarms) { AlarmsView() }
             .sheet(isPresented: $editor) { EventEditor(store: store, date: selected, event: editing) }
             .alert("Couldn’t save changes", isPresented: Binding(get: { store.errorMessage != nil }, set: { if !$0 { store.errorMessage = nil } })) {
                 Button("OK") { store.errorMessage = nil }
@@ -46,6 +48,7 @@ struct CalendarView: View {
                 Label("On this device", systemImage: "internaldrive")
                     .font(.caption).foregroundStyle(.secondary)
                 Spacer()
+                Button { alarms = true } label: { Image(systemName: "alarm").frame(width: 40, height: 40) }.accessibilityLabel("Clocks and alarms")
                 Button { searching.toggle() } label: { Image(systemName: "magnifyingglass").frame(width: 40, height: 40) }
                     .accessibilityLabel("Search events")
                 Button { editing = nil; editor = true } label: { Image(systemName: "plus").font(.title2).frame(width: 40, height: 40) }
@@ -138,27 +141,9 @@ struct CalendarView: View {
         VStack(spacing: 0) {
             Text(selected.formatted(.dateTime.weekday(.wide).day().month(.abbreviated)))
                 .font(.headline).padding(.bottom, 14)
-            ScrollViewReader { proxy in
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
-                        ForEach(store.events(on: selected).filter(\.isAllDay)) { event in
-                            eventButton(event).padding(.leading, 60).padding(.bottom, 8)
-                        }
-                        ForEach(0..<24) { hour in
-                            HStack(alignment: .top, spacing: 12) {
-                                Text(String(format: "%02d:00", hour)).font(.caption.monospacedDigit())
-                                    .foregroundStyle(.secondary).frame(width: 45)
-                                VStack(alignment: .leading, spacing: 5) {
-                                    Rectangle().fill(.white.opacity(0.15)).frame(height: 0.5)
-                                    ForEach(store.events(on: selected).filter { !$0.isAllDay && displayHour($0) == hour }) { event in
-                                        eventButton(event)
-                                    }
-                                    Spacer(minLength: 0)
-                                }
-                            }.frame(minHeight: 76).id(hour)
-                        }
-                    }.padding(.horizontal, 16)
-                }.onAppear { proxy.scrollTo(8, anchor: .top) }
+            DayTimeline(events: store.events(on: selected), date: selected) { event in
+                editing = event
+                editor = true
             }
         }
     }

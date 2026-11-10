@@ -10,7 +10,10 @@
 		48B2BF2358DBAD0446BC0236 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F2A01617B1ED0455D97EAC /* CalendarView.swift */; };
 		70870DB284ED2DD22026B054 /* EventEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0AC6E85E1C6C6DB7AC175E9 /* EventEditor.swift */; };
 		794A6664D3A2482C3C3FFD52 /* SstinckyCalanderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C905BCFC5A094358D114A12 /* SstinckyCalanderApp.swift */; };
+		ABE26FCB8FAF1A95C8B88CB4 /* AlarmsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A87D263AB7AF1F0D83C3C1D3 /* AlarmsView.swift */; };
 		B048B805DD383E68F3E9F2EC /* EventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37FE6E64E26EDA84F529BE78 /* EventStore.swift */; };
+		B5001AE7DA38CA00FADBEFEE /* DayTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = D898C244A74395C14BD3DF7F /* DayTimeline.swift */; };
+		C53F84B6173B436E24FD7DAD /* ReminderScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC585BF713BF2127CB46EE31 /* ReminderScheduler.swift */; };
 		FB0EA15D3710AF193E7449C6 /* CalendarEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169654C58FAF5BA37E201145 /* CalendarEvent.swift */; };
 /* End PBXBuildFile section */
 
@@ -20,17 +23,23 @@
 		49F2A01617B1ED0455D97EAC /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
 		6C905BCFC5A094358D114A12 /* SstinckyCalanderApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SstinckyCalanderApp.swift; sourceTree = "<group>"; };
 		7106EA3522F40993F0A8534F /* sstincky calander.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "sstincky calander.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A87D263AB7AF1F0D83C3C1D3 /* AlarmsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmsView.swift; sourceTree = "<group>"; };
 		C0AC6E85E1C6C6DB7AC175E9 /* EventEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventEditor.swift; sourceTree = "<group>"; };
+		CC585BF713BF2127CB46EE31 /* ReminderScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderScheduler.swift; sourceTree = "<group>"; };
+		D898C244A74395C14BD3DF7F /* DayTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayTimeline.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
 		9B5434C9BF2FAA4D7B2E53EF /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				A87D263AB7AF1F0D83C3C1D3 /* AlarmsView.swift */,
 				169654C58FAF5BA37E201145 /* CalendarEvent.swift */,
 				49F2A01617B1ED0455D97EAC /* CalendarView.swift */,
+				D898C244A74395C14BD3DF7F /* DayTimeline.swift */,
 				C0AC6E85E1C6C6DB7AC175E9 /* EventEditor.swift */,
 				37FE6E64E26EDA84F529BE78 /* EventStore.swift */,
+				CC585BF713BF2127CB46EE31 /* ReminderScheduler.swift */,
 				6C905BCFC5A094358D114A12 /* SstinckyCalanderApp.swift */,
 			);
 			path = Sources;
@@ -110,10 +119,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ABE26FCB8FAF1A95C8B88CB4 /* AlarmsView.swift in Sources */,
 				FB0EA15D3710AF193E7449C6 /* CalendarEvent.swift in Sources */,
 				48B2BF2358DBAD0446BC0236 /* CalendarView.swift in Sources */,
+				B5001AE7DA38CA00FADBEFEE /* DayTimeline.swift in Sources */,
 				70870DB284ED2DD22026B054 /* EventEditor.swift in Sources */,
 				B048B805DD383E68F3E9F2EC /* EventStore.swift in Sources */,
+				C53F84B6173B436E24FD7DAD /* ReminderScheduler.swift in Sources */,
 				794A6664D3A2482C3C3FFD52 /* SstinckyCalanderApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -169,6 +181,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "sstincky calander";
+				INFOPLIST_KEY_NSAlarmKitUsageDescription = "Schedule alarms you create, even when this app is closed.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.3;
@@ -252,6 +265,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "sstincky calander";
+				INFOPLIST_KEY_NSAlarmKitUsageDescription = "Schedule alarms you create, even when this app is closed.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.3;

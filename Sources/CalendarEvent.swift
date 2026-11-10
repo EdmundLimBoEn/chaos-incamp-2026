@@ -26,4 +26,5 @@ struct CalendarEvent: Codable, Identifiable {
     var color: EventColor = .teal
     var updatedAt: Date = Date()
     var deletedAt: Date? = nil
+    var reminderMinutes: Int? = nil
 }

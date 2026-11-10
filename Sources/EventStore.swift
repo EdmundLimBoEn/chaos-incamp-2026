@@ -67,8 +67,16 @@ final class EventStore {
             try persist(next)
             events = next
             errorMessage = nil
+            refreshReminders()
         } catch {
             errorMessage = "Changes could not be saved. \(error.localizedDescription)"
+        }
+    }
+
+    func refreshReminders() {
+        Task {
+            do { try await ReminderScheduler.shared.reconcile(events) }
+            catch { errorMessage = error.localizedDescription }
         }
     }
 

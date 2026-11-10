@@ -11,15 +11,17 @@ struct EventEditor: View {
     @State private var location: String
     @State private var notes: String
     @State private var color: EventColor
+    @State private var reminderMinutes: Int
     @State private var confirmingDelete = false
 
     init(store: EventStore, date: Date, event: CalendarEvent? = nil) {
         self.store = store
         self.event = event
         let initialStart = event?.start ?? Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: date) ?? date
+        _reminderMinutes = State(initialValue: event?.reminderMinutes ?? -1)
         _title = State(initialValue: event?.title ?? "")
         _start = State(initialValue: initialStart)
-        _end = State(initialValue: event?.end ?? initialStart.addingTimeInterval(3600))
+        _end = State(initialValue: event.map { $0.isAllDay ? Calendar.current.date(byAdding: .day, value: -1, to: $0.end)! : $0.end } ?? initialStart.addingTimeInterval(3600))
         _isAllDay = State(initialValue: event?.isAllDay ?? false)
         _location = State(initialValue: event?.location ?? "")
         _notes = State(initialValue: event?.notes ?? "")
@@ -46,6 +48,19 @@ struct EventEditor: View {
                         Text("Choose an end after the start.")
                             .font(.caption).foregroundStyle(.red)
                     }
+                }
+                Section("Reminder") {
+                    Picker("Notify me", selection: $reminderMinutes) {
+                        Text("None").tag(-1)
+                        Text("At start").tag(0)
+                        Text("5 minutes before").tag(5)
+                        Text("15 minutes before").tag(15)
+                        Text("30 minutes before").tag(30)
+                        Text("1 hour before").tag(60)
+                        Text("1 day before").tag(1440)
+                    }
+                    Text("Local notifications work offline. Delivery follows your notification and Focus settings.")
+                        .font(.caption).foregroundStyle(.secondary)
                 }
                 Section("Color") {
                     HStack(spacing: 20) {
@@ -113,7 +128,8 @@ struct EventEditor: View {
             notes: notes,
             color: color,
             updatedAt: Date(),
-            deletedAt: nil
+            deletedAt: nil,
+            reminderMinutes: reminderMinutes < 0 ? nil : reminderMinutes
         ))
         dismiss()
     }
