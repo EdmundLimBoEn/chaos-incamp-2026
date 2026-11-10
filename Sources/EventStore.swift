@@ -35,7 +35,19 @@ final class EventStore {
         let calendar = Calendar.current
         let start = calendar.startOfDay(for: date)
         guard let end = calendar.date(byAdding: .day, value: 1, to: start) else { return [] }
-        return activeEvents.filter { $0.start < end && $0.end > start }
+        return activeEvents.flatMap { EventRecurrence.occurrences($0, in: DateInterval(start: start, end: end)) }.sorted { $0.start < $1.start }
+    }
+
+    func searchEvents(in interval: DateInterval?) -> [CalendarEvent] {
+        let range = interval ?? DateInterval(start: Calendar.current.startOfDay(for: Date()), duration: 90 * 86400)
+        return activeEvents.flatMap { event in
+            if interval == nil && event.recurrence == nil { return [event] }
+            return EventRecurrence.occurrences(event, in: range)
+        }
+    }
+
+    func sourceEvent(_ event: CalendarEvent) -> CalendarEvent {
+        events.first { $0.id == (event.seriesID ?? event.id) } ?? event
     }
 
     func upsert(_ event: CalendarEvent) {
@@ -78,7 +90,8 @@ final class EventStore {
 
     private func publishWidget() {
         do {
-            try WidgetEventSnapshot.write(events)
+            let range = DateInterval(start: Date(), duration: 30 * 86400)
+            try WidgetEventSnapshot.write(activeEvents.flatMap { EventRecurrence.occurrences($0, in: range) })
             WidgetCenter.shared.reloadTimelines(ofKind: WidgetEventSnapshot.kind)
         } catch {
             // Calendar saves remain independent of optional widget provisioning.

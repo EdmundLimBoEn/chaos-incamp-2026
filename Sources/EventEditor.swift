@@ -15,12 +15,18 @@ struct EventEditor: View {
     @State private var people: String
     @State private var tags: String
     @State private var hostName: String
+    @State private var recurrence: String
+    @State private var repeatEnds: Bool
+    @State private var recurrenceUntil: Date
     @State private var confirmingDelete = false
 
     init(store: EventStore, date: Date, event: CalendarEvent? = nil, draft: CalendarEvent? = nil) {
         self.store = store
-        self.event = event
-        let initial = event ?? draft
+        self.event = event.map { store.sourceEvent($0) }
+        let initial = self.event ?? draft
+        _recurrence = State(initialValue: initial?.recurrence ?? "none")
+        _repeatEnds = State(initialValue: initial?.recurrenceUntil != nil)
+        _recurrenceUntil = State(initialValue: initial?.recurrenceUntil ?? Calendar.current.date(byAdding: .month, value: 3, to: date)!)
         _people = State(initialValue: (initial?.people ?? []).joined(separator: ", "))
         _tags = State(initialValue: (initial?.tags ?? []).joined(separator: ", "))
         _hostName = State(initialValue: initial?.hostName ?? "")
@@ -54,6 +60,19 @@ struct EventEditor: View {
                     if !isAllDay && end <= start {
                         Text("Choose an end after the start.")
                             .font(.caption).foregroundStyle(LaunchAppearance.palette.danger)
+                    }
+                }
+                Section("Repeat") {
+                    Picker("Repeats", selection: $recurrence) {
+                        Text("Never").tag("none")
+                        Text("Every day").tag("daily")
+                        Text("Every week").tag("weekly")
+                        Text("Every month").tag("monthly")
+                    }
+                    if recurrence != "none" {
+                        Toggle("End repeat on a date", isOn: $repeatEnds)
+                        if repeatEnds { DatePicker("Last day", selection: $recurrenceUntil, in: Calendar.current.startOfDay(for: start)..., displayedComponents: .date) }
+                        Text("Changes and deletion apply to the entire series.").font(.caption).foregroundStyle(.secondary)
                     }
                 }
                 Section("Reminder") {
@@ -120,7 +139,7 @@ struct EventEditor: View {
                     Button("Save", action: save).fontWeight(.semibold).disabled(!valid)
                 }
             }
-            .confirmationDialog("Delete this event?", isPresented: $confirmingDelete, titleVisibility: .visible) {
+            .confirmationDialog(recurrence == "none" ? "Delete this event?" : "Delete the entire repeating series?", isPresented: $confirmingDelete, titleVisibility: .visible) {
                 Button("Delete event", role: .destructive) {
                     if let event { store.delete(event) }
                     dismiss()
@@ -149,7 +168,9 @@ struct EventEditor: View {
             reminderMinutes: reminderMinutes < 0 ? nil : reminderMinutes,
             people: split(people),
             tags: split(tags).map { $0.trimmingCharacters(in: CharacterSet(charactersIn: "#")) },
-            hostName: hostName.trimmingCharacters(in: .whitespacesAndNewlines)
+            hostName: hostName.trimmingCharacters(in: .whitespacesAndNewlines),
+            recurrence: recurrence == "none" ? nil : recurrence,
+            recurrenceUntil: recurrence != "none" && repeatEnds ? max(start, recurrenceUntil) : nil
         ))
         dismiss()
     }

@@ -25,7 +25,7 @@ struct EventSearchView: View {
     private var results: [CalendarEvent] {
         let now = Date()
         let calendar = Calendar.current
-        return store.activeEvents.filter { event in
+        return store.searchEvents(in: parsed.interval).filter { event in
             guard parsed.matches(event) else { return false }
             if colorFilter != "any" && event.color.rawValue != colorFilter { return false }
             if tagFilter != "any" && !(event.tags ?? []).contains(tagFilter) { return false }
@@ -36,7 +36,7 @@ struct EventSearchView: View {
                 let end = calendar.date(byAdding: .day, value: 1, to: start)!
                 if event.start >= end || event.end <= start { return false }
             }
-            if conflictsOnly && !store.activeEvents.contains(where: { other in
+            if conflictsOnly && !store.searchEvents(in: parsed.interval).contains(where: { other in
                 other.id != event.id && !other.isAllDay && !event.isAllDay && other.start < event.end && other.end > event.start
             }) { return false }
             return true

@@ -48,7 +48,11 @@ struct EventFeedbackView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section { Text(event.title).font(.headline) }
+                Section {
+                    Text(event.title).font(.title2.bold())
+                    Text("How was this event?").font(.headline)
+                    if let host = event.host { Text("Your feedback goes to " + host.displayName).font(.subheadline).foregroundStyle(.secondary) }
+                }
                 AccountLoginSection()
                 Section("Your rating") {
                     HStack {
@@ -57,6 +61,7 @@ struct EventFeedbackView: View {
                                 .buttonStyle(.plain).accessibilityLabel("\(value) stars")
                         }
                     }
+                    Text("\(rating) out of 5 stars").font(.subheadline.bold())
                     TextField("What should the host know?", text: $message, axis: .vertical).lineLimit(4...8)
                     Text("Your rating and message are shared with the event host. Sending again updates your previous feedback.").font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                     Button(busy ? "Sending…" : "Submit feedback") {
@@ -68,7 +73,9 @@ struct EventFeedbackView: View {
                                 submitted = true
                             } catch { self.error = error.localizedDescription }
                         }
-                    }.disabled(busy || ConvexAccount.shared.username == nil || message.count > 3000)
+                    }.buttonStyle(.borderedProminent)
+                        .disabled(busy || ConvexAccount.shared.username == nil || message.count > 3000)
+                    if ConvexAccount.shared.username == nil { Text("Sign in above to send your feedback.").font(.caption).foregroundStyle(.secondary) }
                 }
                 if let error { Section { Text(error).foregroundStyle(LaunchAppearance.palette.danger) } }
             }
@@ -81,6 +88,9 @@ struct EventFeedbackView: View {
 }
 
 struct HostedEventsView: View {
+    var store: EventStore? = nil
+    var isTab = false
+    @State private var browse = false
     @Environment(\.dismiss) private var dismiss
     @State private var events: [PublicListing] = []
     @State private var selected: PublicListing?
@@ -89,7 +99,24 @@ struct HostedEventsView: View {
     var body: some View {
         NavigationStack {
             List {
+                Section {
+                    Label("Event feedback", systemImage: "star.bubble.fill").font(.title2.bold())
+                    Text("Rate an event you attended, or read what people sent about events you host.")
+                        .foregroundStyle(.secondary)
+                    if store != nil {
+                        Button { browse = true } label: {
+                            Label("Leave feedback on an event", systemImage: "square.and.pencil")
+                                .font(.headline).frame(maxWidth: .infinity).padding(.vertical, 6)
+                        }.buttonStyle(.borderedProminent)
+                    }
+                }
+                if ConvexAccount.shared.username == nil {
+                    Section { Text("Sign in below to see feedback on your hosted events.").font(.subheadline) }
+                }
                 AccountLoginSection()
+                Section("Received · events you host") {
+                    Text("Tap an event below to read its ratings and messages.").font(.caption).foregroundStyle(.secondary)
+                }
                 if loading { ProgressView() }
                 if let error { Text(error).foregroundStyle(LaunchAppearance.palette.danger) }
                 ForEach(events) { event in
@@ -100,10 +127,11 @@ struct HostedEventsView: View {
                         }
                     }
                 }
-                if events.isEmpty && !loading && ConvexAccount.shared.username != nil { Text("No hosted events yet.").foregroundStyle(LaunchAppearance.palette.secondary) }
+                if events.isEmpty && !loading && ConvexAccount.shared.username != nil { Text("No hosted events yet. Publish a public event from Discover to start receiving feedback.").foregroundStyle(LaunchAppearance.palette.secondary) }
             }
-            .navigationTitle("My hosted events")
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .navigationTitle("Feedback")
+            .toolbar { if !isTab { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } } }
+            .sheet(isPresented: $browse) { if let store { PublicEventsView(store: store) } }
             .task(id: ConvexAccount.shared.username) { await load() }
             .refreshable { await load() }
             .sheet(item: $selected) { HostFeedbackView(event: $0) }

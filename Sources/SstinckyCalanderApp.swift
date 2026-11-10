@@ -11,7 +11,14 @@ struct SstinckyCalanderApp: App {
     @State private var store = EventStore()
     var body: some Scene {
         WindowGroup {
-            CalendarView(store: store)
+            TabView {
+                CalendarView(store: store)
+                    .tabItem { Label("Calendar", systemImage: "calendar") }
+                PublicEventsView(store: store, isTab: true)
+                    .tabItem { Label("Discover", systemImage: "globe") }
+                HostedEventsView(store: store, isTab: true)
+                    .tabItem { Label("Feedback", systemImage: "star.bubble.fill") }
+            }
                 .overlay { LaunchEffectsView().id(launchID) }
                 .foregroundStyle(LaunchAppearance.palette.foreground)
                 .background(LaunchAppearance.palette.background)

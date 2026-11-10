@@ -24,7 +24,9 @@ final class ReminderScheduler {
         let pending = await center.pendingNotificationRequests()
         guard current == generation else { return }
         center.removePendingNotificationRequests(withIdentifiers: pending.filter { $0.identifier.hasPrefix("event-") }.map(\.identifier))
-        let upcoming = events.filter { $0.deletedAt == nil && $0.reminderMinutes != nil && $0.start.addingTimeInterval(-Double($0.reminderMinutes ?? 0) * 60) > Date() }
+        let range = DateInterval(start: Date(), duration: 366 * 86400)
+        let expanded = events.flatMap { EventRecurrence.occurrences($0, in: range) }
+        let upcoming = expanded.filter { $0.deletedAt == nil && $0.reminderMinutes != nil && $0.start.addingTimeInterval(-Double($0.reminderMinutes ?? 0) * 60) > Date() }
             .sorted { $0.start.addingTimeInterval(-Double($0.reminderMinutes ?? 0) * 60) < $1.start.addingTimeInterval(-Double($1.reminderMinutes ?? 0) * 60) }
         guard !upcoming.isEmpty else { return }
         guard try await center.requestAuthorization(options: [.alert, .sound, .badge]) else {

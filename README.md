@@ -6,7 +6,7 @@ Year, month and day views; search; create, edit and delete events. Sample events
 
 Minimum: iOS 26.3. AlarmKit alarms require iOS 26 or later. Generated with XcodeGen (`xcodegen generate`). Built with Xcode 27.1 and installed on the test iPhone.
 
-Convex sync is not connected. Stable event IDs, update timestamps and deletion tombstones are included for a later sync adapter. Local event reminders and AlarmKit alarms are included. Overlapping timed events appear side by side with red conflict borders. Recurrence is not implemented. Notification and alarm permission are requested when needed. The nearest 60 event reminders are scheduled; opening the app refreshes the queue.
+Convex sync is not connected. Stable event IDs, update timestamps and deletion tombstones are included for a later sync adapter. Local event reminders and AlarmKit alarms are included. Overlapping timed events appear side by side with red conflict borders. Private events support daily, weekly and monthly repeats, with optional end dates. Edits and deletion apply to the whole series. Notification and alarm permission are requested when needed. The nearest 60 event reminders are scheduled; opening the app refreshes the queue.
 
 Written by gpt-6.1-sol in Codex on behalf of Edmund
 
@@ -17,3 +17,5 @@ Search understands dates, times, @people and #tags, with filters and prefilled e
 Tap Create event for an offline private event. Use sliders → Create public event to sign up or sign in, enter a host profile and publish; password recovery is not implemented.
 
 Appearance includes persistent, subtle random and crazy RGB modes, confetti and optional chimes. Public events load on discovery and empty search; signed-in guests can rate and send feedback, and hosts can read it under My hosted events. Search uses on-device Apple Intelligence when available, with offline parsing otherwise.
+
+Calendar, Discover and Feedback are permanent tabs. Leave feedback from a public event card; open Feedback to read ratings for events you host.

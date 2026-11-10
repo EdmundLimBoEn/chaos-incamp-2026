@@ -17,6 +17,7 @@ private struct ConvexResponse: Decodable { let status: String; let value: Listin
 
 struct PublicEventsView: View {
     let store: EventStore
+    var isTab = false
     @Environment(\.dismiss) private var dismiss
     @AppStorage("convexDeploymentURL") private var deploymentURL = "https://majestic-vulture-890.convex.cloud"
     @State private var publish = false
@@ -35,15 +36,9 @@ struct PublicEventsView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Convex connection") {
-                    TextField("https://your-deployment.convex.cloud", text: $deploymentURL)
-                        .textInputAutocapitalization(.never).autocorrectionDisabled().keyboardType(.URL)
-                    Text("Only published listings are fetched. Your private calendar stays on this device.")
-                        .font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
-                }
                 Section {
                     Button("Create public event", systemImage: "plus.circle.fill") { publish = true }
-                    Button("My hosted events & feedback", systemImage: "star.bubble") { hostDashboard = true }
+                    Button("Read feedback on my events", systemImage: "star.bubble.fill") { hostDashboard = true }
                 }
                 Section("Find public events") {
                     TextField("Title, host or description", text: $query)
@@ -62,7 +57,10 @@ struct PublicEventsView: View {
                                 if !host.bio.isEmpty { Text(host.bio).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary) }
                             }
                             if !listing.tags.isEmpty { Text(listing.tags.map { "#" + $0 }.joined(separator: " ")).font(.caption).foregroundStyle(.tint) }
-                            Button("Rate & send feedback", systemImage: "star.bubble") { feedbackEvent = listing }
+                            Button { feedbackEvent = listing } label: {
+                                Label("Leave feedback", systemImage: "star.bubble.fill")
+                                    .font(.headline).frame(maxWidth: .infinity).padding(.vertical, 5)
+                            }.buttonStyle(.borderedProminent)
                             Button("Add to my calendar", systemImage: "calendar.badge.plus") {
                                 draft = CalendarEvent(title: listing.title, start: Date(timeIntervalSince1970: listing.start / 1000), end: Date(timeIntervalSince1970: listing.end / 1000), location: listing.location, notes: listing.description, tags: listing.tags, hostName: listing.host?.displayName)
                                 editor = true
@@ -76,11 +74,11 @@ struct PublicEventsView: View {
                 }
             }
             .navigationTitle("Discover")
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .toolbar { if !isTab { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } } }
             .task { await load(reset: true) }
             .refreshable { await load(reset: true) }
             .sheet(item: $feedbackEvent) { EventFeedbackView(event: $0) }
-            .sheet(isPresented: $hostDashboard) { HostedEventsView() }
+            .sheet(isPresented: $hostDashboard) { HostedEventsView(store: store) }
             .sheet(isPresented: $publish, onDismiss: { Task { await load(reset: true) } }) { PublicEventComposer(store: store) }
             .sheet(isPresented: $editor) { EventEditor(store: store, date: Date(), draft: draft) }
         }

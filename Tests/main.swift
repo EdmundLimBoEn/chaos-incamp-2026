@@ -28,3 +28,18 @@ assert(calendar.component(.month, from: natural.start) == 11)
 assert(calendar.component(.year, from: natural.start) == 2026)
 assert(calendar.component(.hour, from: natural.start) == 15)
 print("Natural-language screenshot regression passed")
+var weekly = CalendarEvent(title: "Weekly standup", start: now, end: now.addingTimeInterval(3600), recurrence: "weekly")
+let nextWeek = calendar.date(byAdding: .day, value: 7, to: now)!
+let nextRange = calendar.dateInterval(of: .day, for: nextWeek)!
+let occurrences = EventRecurrence.occurrences(weekly, in: nextRange)
+assert(occurrences.count == 1 && occurrences[0].start == nextWeek)
+assert(occurrences[0].seriesID == weekly.id && occurrences[0].id != weekly.id)
+assert(EventRecurrence.occurrences(weekly, in: nextRange)[0].id == occurrences[0].id)
+weekly.recurrenceUntil = now
+assert(EventRecurrence.occurrences(weekly, in: nextRange).isEmpty)
+let jan = calendar.date(from: DateComponents(year: 2027, month: 1, day: 31, hour: 9))!
+let monthly = CalendarEvent(title: "Month end", start: jan, end: jan.addingTimeInterval(3600), recurrence: "monthly")
+let march = calendar.date(from: DateComponents(year: 2027, month: 3, day: 31))!
+let marchResult = EventRecurrence.occurrences(monthly, in: calendar.dateInterval(of: .day, for: march)!)
+assert(marchResult.count == 1 && calendar.component(.day, from: marchResult[0].start) == 31)
+print("Recurring events: weekly dates, stable IDs, end date and month anchor passed")
