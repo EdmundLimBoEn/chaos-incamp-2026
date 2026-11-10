@@ -25,6 +25,8 @@
 		92DAE3B142A22A9176D005A9 /* AppearanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B3FC783776B09B53134A884 /* AppearanceView.swift */; };
 		4ABBBE25BE6B8741290E65BF /* CalendarSystemsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08174098CB337EB395899202 /* CalendarSystemsView.swift */; };
 		B136915E76A9DD08675C3C87 /* PublicEventsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E99A69AE47B8738B409793A2 /* PublicEventsView.swift */; };
+		3F983939C11F93FBA6FD9BDE /* ConvexAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11D2BA03662AFAA747511BD7 /* ConvexAccount.swift */; };
+		787731F41C15EBE1B64C5BFC /* PublicEventComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC988A9D109E7C151C8AEDA /* PublicEventComposer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -69,12 +71,16 @@
 		9B3FC783776B09B53134A884 /* AppearanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceView.swift; sourceTree = "<group>"; };
 		08174098CB337EB395899202 /* CalendarSystemsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarSystemsView.swift; sourceTree = "<group>"; };
 		E99A69AE47B8738B409793A2 /* PublicEventsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicEventsView.swift; sourceTree = "<group>"; };
+		11D2BA03662AFAA747511BD7 /* ConvexAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvexAccount.swift; sourceTree = "<group>"; };
+		CCC988A9D109E7C151C8AEDA /* PublicEventComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicEventComposer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
 		9B5434C9BF2FAA4D7B2E53EF /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				CCC988A9D109E7C151C8AEDA /* PublicEventComposer.swift */,
+				11D2BA03662AFAA747511BD7 /* ConvexAccount.swift */,
 				E99A69AE47B8738B409793A2 /* PublicEventsView.swift */,
 				08174098CB337EB395899202 /* CalendarSystemsView.swift */,
 				9B3FC783776B09B53134A884 /* AppearanceView.swift */,
@@ -211,6 +217,8 @@
 				ABE26FCB8FAF1A95C8B88CB4 /* AlarmsView.swift in Sources */,
 				FB0EA15D3710AF193E7449C6 /* CalendarEvent.swift in Sources */,
 				48B2BF2358DBAD0446BC0236 /* CalendarView.swift in Sources */,
+				787731F41C15EBE1B64C5BFC /* PublicEventComposer.swift in Sources */,
+				3F983939C11F93FBA6FD9BDE /* ConvexAccount.swift in Sources */,
 				B136915E76A9DD08675C3C87 /* PublicEventsView.swift in Sources */,
 				4ABBBE25BE6B8741290E65BF /* CalendarSystemsView.swift in Sources */,
 				92DAE3B142A22A9176D005A9 /* AppearanceView.swift in Sources */,

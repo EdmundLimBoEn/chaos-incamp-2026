@@ -12,4 +12,6 @@ Written by gpt-6.1-sol in Codex on behalf of Edmund
 
 Home Screen widget: small and medium upcoming-event views. Both targets use `group.systems.edmundlim.daymark`; enable that App Group for your signing team, run the app once, then add the widget from the Home Screen.
 
-Search understands dates, times, @people and #tags, with filters and prefilled event creation. The sliders menu contains themes, secondary calendar dates and public Convex discovery. Public discovery is connected to the development Convex deployment. Private cloud sync and sign-in are still pending.
+Search understands dates, times, @people and #tags, with filters and prefilled event creation. The sliders menu contains themes, secondary calendar dates and public Convex discovery. Public discovery is connected to the development Convex deployment. Username/password sign-in supports public publishing. Private cloud sync is still pending.
+
+Tap Create event for an offline private event. Use sliders → Create public event to sign up or sign in, enter a host profile and publish; password recovery is not implemented.

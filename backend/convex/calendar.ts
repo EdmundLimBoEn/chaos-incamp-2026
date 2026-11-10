@@ -1,12 +1,13 @@
+import { getAuthUserId } from "@convex-dev/auth/server";
 import { mutation, query } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("Sign in required");
-    return ctx.db.query("events").withIndex("by_owner", q => q.eq("owner", identity.tokenIdentifier)).collect();
+    const owner = await getAuthUserId(ctx);
+    if (!owner) throw new ConvexError("Sign in required");
+    return ctx.db.query("events").withIndex("by_owner", q => q.eq("owner", owner)).collect();
   },
 });
 
@@ -20,9 +21,8 @@ export const upsert = mutation({
     expectedUpdatedAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("Sign in required");
-    const owner = identity.tokenIdentifier;
+    const owner = await getAuthUserId(ctx);
+    if (!owner) throw new ConvexError("Sign in required");
     if (!args.title.trim() || !Number.isFinite(args.start) || !Number.isFinite(args.end) || args.end <= args.start) {
       throw new ConvexError("Invalid event");
     }
@@ -39,9 +39,8 @@ export const upsert = mutation({
 export const remove = mutation({
   args: { clientId: v.string(), expectedUpdatedAt: v.number() },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("Sign in required");
-    const owner = identity.tokenIdentifier;
+    const owner = await getAuthUserId(ctx);
+    if (!owner) throw new ConvexError("Sign in required");
     const event = await ctx.db.query("events").withIndex("by_owner_client", q => q.eq("owner", owner).eq("clientId", args.clientId)).unique();
     if (!event || event.updatedAt !== args.expectedUpdatedAt) throw new ConvexError("Event changed or missing");
     const now = Date.now();

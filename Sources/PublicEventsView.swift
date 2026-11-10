@@ -18,6 +18,7 @@ struct PublicEventsView: View {
     let store: EventStore
     @Environment(\.dismiss) private var dismiss
     @AppStorage("convexDeploymentURL") private var deploymentURL = "https://majestic-vulture-890.convex.cloud"
+    @State private var publish = false
     @State private var query = ""
     @State private var tag = ""
     @State private var listings: [PublicListing] = []
@@ -36,6 +37,9 @@ struct PublicEventsView: View {
                         .textInputAutocapitalization(.never).autocorrectionDisabled().keyboardType(.URL)
                     Text("Only published listings are fetched. Your private calendar stays on this device.")
                         .font(.caption).foregroundStyle(.secondary)
+                }
+                Section {
+                    Button("Create public event", systemImage: "plus.circle.fill") { publish = true }
                 }
                 Section("Find public events") {
                     TextField("Title, host or description", text: $query)
@@ -68,6 +72,7 @@ struct PublicEventsView: View {
             }
             .navigationTitle("Discover")
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .sheet(isPresented: $publish, onDismiss: { Task { await load(reset: true) } }) { PublicEventComposer(store: store) }
             .sheet(isPresented: $editor) { EventEditor(store: store, date: Date(), draft: draft) }
         }
     }

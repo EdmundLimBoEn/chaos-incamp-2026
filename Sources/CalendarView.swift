@@ -9,6 +9,7 @@ struct CalendarView: View {
     @AppStorage("secondaryCalendar") private var secondaryCalendar = "none"
     @State private var appearance = false
     @State private var discover = false
+    @State private var publishEvent = false
     @State private var calendarSystems = false
     private var accent: Color { CalendarAppearance.accent(accentKey) }
     @State private var selected = Date()
@@ -35,6 +36,7 @@ struct CalendarView: View {
             .safeAreaInset(edge: .bottom) { bottomBar }
             .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $searching) { EventSearchView(store: store) }
+            .sheet(isPresented: $publishEvent) { PublicEventComposer(store: store) }
             .sheet(isPresented: $discover) { PublicEventsView(store: store) }
             .sheet(isPresented: $appearance) { AppearanceView() }
             .sheet(isPresented: $calendarSystems) { CalendarSystemsView() }
@@ -53,6 +55,7 @@ struct CalendarView: View {
                     .font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 Menu {
+                    Button("Create public event", systemImage: "globe.badge.chevron.backward") { publishEvent = true }
                     Button("Discover public events", systemImage: "globe") { discover = true }
                     Button("Appearance", systemImage: "paintpalette") { appearance = true }
                     Button("Calendar systems", systemImage: "moonphase.waning.crescent") { calendarSystems = true }
@@ -195,7 +198,7 @@ struct CalendarView: View {
             Spacer()
             Text("sstincky calander").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
             Spacer()
-            Button { editing = nil; editor = true } label: { Label("Event", systemImage: "plus") }.font(.headline)
+            Button { editing = nil; editor = true } label: { Label("Create event", systemImage: "plus.circle.fill") }.font(.headline)
         }.padding(.horizontal, 24).padding(.vertical, 16).background(.ultraThinMaterial, in: Capsule()).padding(.horizontal, 18).padding(.bottom, 8)
     }
 

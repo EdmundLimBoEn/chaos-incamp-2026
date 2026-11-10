@@ -6,7 +6,10 @@
     "deploy": "convex deploy"
   },
   "dependencies": {
-    "convex": "^1.49.0"
+    "@auth/core": "^0.41.3",
+    "@convex-dev/auth": "^0.0.98",
+    "convex": "^1.49.0",
+    "jose": "^6.2.17"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

@@ -1,3 +1,4 @@
+import { getAuthUserId } from "@convex-dev/auth/server";
 import { mutation, query } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
@@ -5,11 +6,10 @@ import { paginationOptsValidator } from "convex/server";
 export const saveHost = mutation({
   args: { displayName: v.string(), bio: v.string() },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("Sign in required");
+    const owner = await getAuthUserId(ctx);
+    if (!owner) throw new ConvexError("Sign in required");
     const displayName = args.displayName.trim();
     if (!displayName || displayName.length > 100 || args.bio.length > 2000) throw new ConvexError("Invalid host profile");
-    const owner = identity.tokenIdentifier;
     const existing = await ctx.db.query("hosts").withIndex("by_owner", q => q.eq("owner", owner)).unique();
     const data = { owner, displayName, bio: args.bio.trim(), updatedAt: Date.now() };
     if (existing) { await ctx.db.patch(existing._id, data); return existing._id; }
@@ -24,9 +24,8 @@ export const publish = mutation({
     published: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("Sign in required");
-    const owner = identity.tokenIdentifier;
+    const owner = await getAuthUserId(ctx);
+    if (!owner) throw new ConvexError("Sign in required");
     const host = await ctx.db.query("hosts").withIndex("by_owner", q => q.eq("owner", owner)).unique();
     if (!host) throw new ConvexError("Create a host profile first");
     if (!args.title.trim() || args.title.length > 200 || args.description.length > 10000 || args.tags.length > 12 || args.tags.some(tag => tag.length > 50) || !Number.isFinite(args.start) || !Number.isFinite(args.end) || args.end <= args.start) throw new ConvexError("Invalid listing");
