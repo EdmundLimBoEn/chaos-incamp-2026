@@ -26,15 +26,32 @@ struct EventSearchQuery {
             source = regex.stringByReplacingMatches(in: source, range: NSRange(source.startIndex..., in: source), withTemplate: " ")
             return values
         }
-        foundPeople = extract(#"(?:^|\s)@([\p{L}\p{N}_-]+)"#, from: &remaining).map { $0[1] }
+        foundPeople = extract(#"(?:^|\s)@(?:"([^"]+)"|([\p{L}\p{N}_-]+))"#, from: &remaining).map { $0[1].isEmpty ? $0[2] : $0[1] }
         foundTags = extract(#"(?:^|\s)#([\p{L}\p{N}_-]+)"#, from: &remaining).map { $0[1] }
-        people = foundPeople
-        tags = foundTags
 
         var dateRange: DateInterval?
         let today = calendar.startOfDay(for: now)
         func dayRange(_ date: Date) -> DateInterval? { calendar.dateInterval(of: .day, for: date) }
-        if !extract(#"\btomorrow\b"#, from: &remaining).isEmpty {
+        let monthNames = "january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec"
+        let naturalPattern = "\\b([0-3]?[0-9])(?:st|nd|rd|th)?\\s+(" + monthNames + ")(?:\\s+(\\d{4}))?\\b"
+        if let regex = try? NSRegularExpression(pattern: naturalPattern, options: .caseInsensitive),
+           let match = regex.firstMatch(in: remaining, range: NSRange(remaining.startIndex..., in: remaining)),
+           let range = Range(match.range, in: remaining) {
+            func part(_ index: Int) -> String { Range(match.range(at: index), in: remaining).map { String(remaining[$0]) } ?? "" }
+            let year = part(3).isEmpty ? String(calendar.component(.year, from: now)) : part(3)
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.calendar = calendar
+            formatter.timeZone = calendar.timeZone
+            formatter.isLenient = false
+            formatter.dateFormat = part(2).count <= 3 ? "d MMM yyyy" : "d MMMM yyyy"
+            if let date = formatter.date(from: part(1) + " " + part(2) + " " + year) {
+                dateRange = dayRange(date)
+                remaining.replaceSubrange(range, with: " ")
+            }
+        }
+        if dateRange != nil {
+        } else if !extract(#"\btomorrow\b"#, from: &remaining).isEmpty {
             dateRange = calendar.date(byAdding: .day, value: 1, to: today).flatMap(dayRange)
         } else if !extract(#"\btoday\b"#, from: &remaining).isEmpty {
             dateRange = dayRange(today)
@@ -92,6 +109,10 @@ struct EventSearchQuery {
         }
         hour = foundHour
         minute = foundMinute
+        let withPeople = extract(#"\bwith\s+([\p{L}][\p{L}\p{N}_-]*)"#, from: &remaining).map { $0[1] }
+        foundPeople += withPeople
+        people = foundPeople
+        tags = foundTags
         text = remaining.split(whereSeparator: \.isWhitespace).joined(separator: " ")
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
@@ -101,7 +122,7 @@ struct EventSearchQuery {
         if let interval, !(event.start < interval.end && event.end > interval.start) { return false }
         if let hour, Calendar.current.component(.hour, from: event.start) != hour { return false }
         let eventPeople = (event.people ?? []) + [event.hostName ?? ""]
-        if !people.allSatisfy({ term in eventPeople.contains { $0.localizedCaseInsensitiveContains(term) } }) { return false }
+        if !people.allSatisfy({ term in (eventPeople + [event.title, event.notes]).contains { $0.localizedCaseInsensitiveContains(term) } }) { return false }
         if !tags.allSatisfy({ term in (event.tags ?? []).contains { $0.localizedCaseInsensitiveCompare(term) == .orderedSame } }) { return false }
         let searchable = ([event.title, event.location, event.notes] + eventPeople + (event.tags ?? [])).joined(separator: " ")
         return text.split(whereSeparator: \.isWhitespace).allSatisfy { searchable.localizedCaseInsensitiveContains(String($0)) }

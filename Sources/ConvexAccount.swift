@@ -39,6 +39,11 @@ final class ConvexAccount {
         _ = try await call(kind: "mutation", path: "discovery:publish", args: ["title": title, "description": description, "start": start.timeIntervalSince1970 * 1000, "end": end.timeIntervalSince1970 * 1000, "location": location, "tags": tags, "published": true], token: token)
     }
 
+    func authenticated<T: Decodable>(_ type: T.Type, kind: String, path: String, args: [String: Any]) async throws -> T {
+        let result = try await call(kind: kind, path: path, args: args, token: validToken())
+        return try JSONDecoder().decode(type, from: JSONSerialization.data(withJSONObject: result))
+    }
+
     private func validToken() async throws -> String {
         guard let session else { throw AccountError.message("Sign in to publish public events.") }
         let parts = session.token.split(separator: ".")

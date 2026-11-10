@@ -37,7 +37,7 @@ struct PublicEventComposer: View {
                         SecureField("Password (8+ characters)", text: $password)
                             .textContentType(createAccount ? .newPassword : .password)
                         Text("Usernames: 3–30 lowercase letters, numbers or underscores. Password recovery is not available in this prototype.")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                         Button(createAccount ? "Create account" : "Sign in") {
                             Task {
                                 busy = true; error = nil
@@ -57,7 +57,7 @@ struct PublicEventComposer: View {
                     TextField("Location", text: $location)
                     DatePicker("Starts", selection: $start)
                     DatePicker("Ends", selection: $end)
-                    if end <= start { Text("End must be after the start.").font(.caption).foregroundStyle(.red) }
+                    if end <= start { Text("End must be after the start.").font(.caption).foregroundStyle(LaunchAppearance.palette.danger) }
                     TextField("Tags, separated by commas", text: $tags).textInputAutocapitalization(.never)
                 }
                 Section("Host profile") {
@@ -67,12 +67,12 @@ struct PublicEventComposer: View {
                 Section {
                     Toggle("Also add to my private calendar", isOn: $localCopy)
                     Text("Publishing makes this event and host profile visible to everyone. Your other calendar events stay private.")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                     Button(busy ? "Please wait…" : "Publish public event", systemImage: "globe") {
                         Task { await publish() }
                     }.disabled(busy || account.username == nil || title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || host.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || end <= start)
                 }
-                if let error { Section { Text(error).foregroundStyle(.red).textSelection(.enabled) } }
+                if let error { Section { Text(error).foregroundStyle(LaunchAppearance.palette.danger).textSelection(.enabled) } }
             }
             .navigationTitle("Create public event")
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(busy) } }

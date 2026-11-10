@@ -21,7 +21,7 @@ struct AlarmsView: View {
                     }
                     Text("Alarms require iOS 26 or later.")
                     Text("Event reminders still work on this device.")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(LaunchAppearance.palette.secondary)
                 }
                 .navigationTitle("Clock")
                 .toolbar { Button("Done") { dismiss() } }
@@ -55,7 +55,7 @@ private struct AlarmKitView: View {
                                 .font(.system(size: 52, weight: .light, design: .rounded))
                                 .monospacedDigit()
                             Text(TimeZone.current.identifier.replacingOccurrences(of: "_", with: " "))
-                                .font(.caption).foregroundStyle(.secondary)
+                                .font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                         }.frame(maxWidth: .infinity).padding(.vertical, 20)
                     }
                 }
@@ -70,13 +70,13 @@ private struct AlarmKitView: View {
                 }
                 Section("Your alarms") {
                     if alarms.isEmpty {
-                        Text("No alarms set").foregroundStyle(.secondary)
+                        Text("No alarms set").foregroundStyle(LaunchAppearance.palette.secondary)
                     }
                     ForEach(alarms) { alarm in
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(titles[alarm.id.uuidString] ?? "Alarm").font(.headline)
-                                Text(scheduleLabel(alarm)).font(.subheadline).foregroundStyle(.secondary)
+                                Text(scheduleLabel(alarm)).font(.subheadline).foregroundStyle(LaunchAppearance.palette.secondary)
                             }
                             Spacer()
                             Button(role: .destructive) { cancel(alarm) } label: {
@@ -92,7 +92,7 @@ private struct AlarmKitView: View {
                         }
                     }
                     Text("Alarms use Apple AlarmKit. Permission is requested when you set your first alarm.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(LaunchAppearance.palette.secondary)
                 }
             }
             .navigationTitle("Clock & alarms")
@@ -128,7 +128,7 @@ private struct AlarmKitView: View {
                 return
             }
             let label = title.trimmingCharacters(in: .whitespacesAndNewlines)
-            let presentation = AlarmPresentation(alert: .init(title: LocalizedStringResource(stringLiteral: label)))
+            let presentation = AlarmPresentation(alert: . init(title: LocalizedStringResource(stringLiteral: label)))
             let attributes = AlarmAttributes(presentation: presentation, metadata: CalendarAlarmMetadata(title: label), tintColor: .red)
             let id = UUID()
             let configuration = AlarmManager.AlarmConfiguration<CalendarAlarmMetadata>.alarm(schedule: .fixed(date), attributes: attributes)

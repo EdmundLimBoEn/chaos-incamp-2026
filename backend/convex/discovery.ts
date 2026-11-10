@@ -65,3 +65,17 @@ export const search = query({
     return { ...result, page };
   },
 });
+
+export const myListings = query({
+  args: {},
+  handler: async (ctx) => {
+    const owner = await getAuthUserId(ctx);
+    if (!owner) throw new ConvexError("Sign in required");
+    const listings = await ctx.db.query("publicListings").withIndex("by_owner", q => q.eq("owner", owner)).collect();
+    const events = await Promise.all(listings.sort((a, b) => b.start - a.start).map(async item => {
+      const host = await ctx.db.get(item.hostId);
+      return { id: item._id, title: item.title, description: item.description, tags: item.tags, start: item.start, end: item.end, location: item.location, published: item.published, host: host ? { id: host._id, displayName: host.displayName, bio: host.bio } : null };
+    }));
+    return { events };
+  },
+});

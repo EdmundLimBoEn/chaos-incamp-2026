@@ -1,7 +1,7 @@
 import SwiftUI
 
-private struct PublicHost: Decodable { let displayName: String; let bio: String }
-private struct PublicListing: Decodable, Identifiable {
+struct PublicHost: Decodable { let displayName: String; let bio: String }
+struct PublicListing: Decodable, Identifiable {
     let id: String
     let title: String
     let description: String
@@ -10,6 +10,7 @@ private struct PublicListing: Decodable, Identifiable {
     let end: Double
     let location: String
     let host: PublicHost?
+    var published: Bool? = nil
 }
 private struct ListingPage: Decodable { let page: [PublicListing]; let isDone: Bool; let continueCursor: String }
 private struct ConvexResponse: Decodable { let status: String; let value: ListingPage?; let errorMessage: String? }
@@ -19,6 +20,8 @@ struct PublicEventsView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage("convexDeploymentURL") private var deploymentURL = "https://majestic-vulture-890.convex.cloud"
     @State private var publish = false
+    @State private var hostDashboard = false
+    @State private var feedbackEvent: PublicListing?
     @State private var query = ""
     @State private var tag = ""
     @State private var listings: [PublicListing] = []
@@ -36,28 +39,30 @@ struct PublicEventsView: View {
                     TextField("https://your-deployment.convex.cloud", text: $deploymentURL)
                         .textInputAutocapitalization(.never).autocorrectionDisabled().keyboardType(.URL)
                     Text("Only published listings are fetched. Your private calendar stays on this device.")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                 }
                 Section {
                     Button("Create public event", systemImage: "plus.circle.fill") { publish = true }
+                    Button("My hosted events & feedback", systemImage: "star.bubble") { hostDashboard = true }
                 }
                 Section("Find public events") {
                     TextField("Title, host or description", text: $query)
                     TextField("Tag", text: $tag).textInputAutocapitalization(.never)
                     Button(loading ? "Loading…" : "Search public events") { Task { await load(reset: true) } }.disabled(loading)
                 }
-                if let error { Section { Text(error).foregroundStyle(.red) } }
+                if let error { Section { Text(error).foregroundStyle(LaunchAppearance.palette.danger) } }
                 ForEach(listings) { listing in
                     Section {
                         VStack(alignment: .leading, spacing: 8) {
                             Text(listing.title).font(.headline)
-                            Text(Date(timeIntervalSince1970: listing.start / 1000).formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(.secondary)
+                            Text(Date(timeIntervalSince1970: listing.start / 1000).formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                             Text(listing.description).font(.subheadline)
                             if let host = listing.host {
                                 Label(host.displayName, systemImage: "person.crop.circle").font(.subheadline)
-                                if !host.bio.isEmpty { Text(host.bio).font(.caption).foregroundStyle(.secondary) }
+                                if !host.bio.isEmpty { Text(host.bio).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary) }
                             }
                             if !listing.tags.isEmpty { Text(listing.tags.map { "#" + $0 }.joined(separator: " ")).font(.caption).foregroundStyle(.tint) }
+                            Button("Rate & send feedback", systemImage: "star.bubble") { feedbackEvent = listing }
                             Button("Add to my calendar", systemImage: "calendar.badge.plus") {
                                 draft = CalendarEvent(title: listing.title, start: Date(timeIntervalSince1970: listing.start / 1000), end: Date(timeIntervalSince1970: listing.end / 1000), location: listing.location, notes: listing.description, tags: listing.tags, hostName: listing.host?.displayName)
                                 editor = true
@@ -67,11 +72,15 @@ struct PublicEventsView: View {
                 }
                 if !done { Button("Load more") { Task { await load(reset: false) } }.disabled(loading) }
                 if listings.isEmpty && !loading && error == nil {
-                    Text("Connect a deployment and search to see published events.").font(.caption).foregroundStyle(.secondary)
+                    Text("No public events yet. Create one to get started.").font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                 }
             }
             .navigationTitle("Discover")
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .task { await load(reset: true) }
+            .refreshable { await load(reset: true) }
+            .sheet(item: $feedbackEvent) { EventFeedbackView(event: $0) }
+            .sheet(isPresented: $hostDashboard) { HostedEventsView() }
             .sheet(isPresented: $publish, onDismiss: { Task { await load(reset: true) } }) { PublicEventComposer(store: store) }
             .sheet(isPresented: $editor) { EventEditor(store: store, date: Date(), draft: draft) }
         }
@@ -110,5 +119,43 @@ struct PublicEventsView: View {
             cursor = page.continueCursor
             done = page.isDone
         } catch { self.error = "Couldn’t load listings. \(error.localizedDescription)" }
+    }
+}
+
+struct PublicDiscoveryPreview: View {
+    let store: EventStore
+    @State private var listings: [PublicListing] = []
+    @State private var loading = true
+    @State private var error: String?
+    var body: some View {
+        Section("Public events · discover without searching") {
+            if loading { ProgressView("Loading public events…") }
+            ForEach(listings) { event in
+                NavigationLink {
+                    EventFeedbackView(event: event)
+                } label: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(event.title).font(.headline)
+                        Text(Date(timeIntervalSince1970: event.start / 1000).formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
+                        if let host = event.host { Text("Hosted by " + host.displayName).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary) }
+                    }
+                }
+            }
+            if !loading && listings.isEmpty { Text(error ?? "No public events yet. Publish the first one from Discover.").font(.caption).foregroundStyle(LaunchAppearance.palette.secondary) }
+            NavigationLink("Browse all public events") { PublicEventsView(store: store) }
+        }
+        .task {
+            do {
+                var request = URLRequest(url: ConvexAccount.baseURL.appendingPathComponent("api/query"))
+                request.httpMethod = "POST"
+                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                request.httpBody = try JSONSerialization.data(withJSONObject: ["path": "discovery:search", "args": ["paginationOpts": ["numItems": 20, "cursor": NSNull()]], "format": "json"])
+                let (data, _) = try await URLSession.shared.data(for: request)
+                let response = try JSONDecoder().decode(ConvexResponse.self, from: data)
+                listings = response.value?.page ?? []
+                if response.status != "success" { error = "Couldn’t load public events. Open Discover to retry." }
+            } catch { self.error = "You’re offline. Your private calendar is still available." }
+            loading = false
+        }
     }
 }

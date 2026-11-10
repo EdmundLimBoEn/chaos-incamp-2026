@@ -27,6 +27,11 @@
 		B136915E76A9DD08675C3C87 /* PublicEventsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E99A69AE47B8738B409793A2 /* PublicEventsView.swift */; };
 		3F983939C11F93FBA6FD9BDE /* ConvexAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11D2BA03662AFAA747511BD7 /* ConvexAccount.swift */; };
 		787731F41C15EBE1B64C5BFC /* PublicEventComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC988A9D109E7C151C8AEDA /* PublicEventComposer.swift */; };
+		E1B9819F5D601473247EF529 /* EventFeedbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32E4EDEF317547714FB05927 /* EventFeedbackView.swift */; };
+		33342CE3A564D43200B299A4 /* LaunchAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA1C10AE02791631FFAC22D9 /* LaunchAppearance.swift */; };
+		D61CA6F7D124D349E2EAC398 /* LaunchEffectsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29EDFEBE11E5743E8AD4EF14 /* LaunchEffectsView.swift */; };
+		7C2349C339B294F6C73B70D3 /* IntelligentEventParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE8C16E77AAB9D005FBDF182 /* IntelligentEventParser.swift */; };
+		AC0000000000000000000001 /* ConfettiSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = AC0000000000000000000002 /* ConfettiSwiftUI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -73,12 +78,23 @@
 		E99A69AE47B8738B409793A2 /* PublicEventsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicEventsView.swift; sourceTree = "<group>"; };
 		11D2BA03662AFAA747511BD7 /* ConvexAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvexAccount.swift; sourceTree = "<group>"; };
 		CCC988A9D109E7C151C8AEDA /* PublicEventComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicEventComposer.swift; sourceTree = "<group>"; };
+		32E4EDEF317547714FB05927 /* EventFeedbackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventFeedbackView.swift; sourceTree = "<group>"; };
+		CA1C10AE02791631FFAC22D9 /* LaunchAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAppearance.swift; sourceTree = "<group>"; };
+		29EDFEBE11E5743E8AD4EF14 /* LaunchEffectsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchEffectsView.swift; sourceTree = "<group>"; };
+		EE8C16E77AAB9D005FBDF182 /* IntelligentEventParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntelligentEventParser.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFrameworksBuildPhase section */
+        AC0000000000000000000003 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (AC0000000000000000000001 /* ConfettiSwiftUI in Frameworks */,); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
 /* Begin PBXGroup section */
 		9B5434C9BF2FAA4D7B2E53EF /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				EE8C16E77AAB9D005FBDF182 /* IntelligentEventParser.swift */,
+				29EDFEBE11E5743E8AD4EF14 /* LaunchEffectsView.swift */,
+				CA1C10AE02791631FFAC22D9 /* LaunchAppearance.swift */,
+				32E4EDEF317547714FB05927 /* EventFeedbackView.swift */,
 				CCC988A9D109E7C151C8AEDA /* PublicEventComposer.swift */,
 				11D2BA03662AFAA747511BD7 /* ConvexAccount.swift */,
 				E99A69AE47B8738B409793A2 /* PublicEventsView.swift */,
@@ -158,6 +174,7 @@
 			buildConfigurationList = 9D4672B7E65D4197C98842F2 /* Build configuration list for PBXNativeTarget "sstincky calander" */;
 			buildPhases = (
 				2F008FDB8CAB53F7F038A916 /* Sources */,
+                AC0000000000000000000003 /* Frameworks */,
 				247B96004D8115091BF210C0 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
@@ -167,6 +184,7 @@
 			);
 			name = "sstincky calander";
 			packageProductDependencies = (
+                AC0000000000000000000002 /* ConfettiSwiftUI */,
 			);
 			productName = "sstincky calander";
 			productReference = 7106EA3522F40993F0A8534F /* sstincky calander.app */;
@@ -196,7 +214,8 @@
 				Base,
 				en,
 			);
-			mainGroup = E7C305DE071687A723CC7FD4;
+			packageReferences = (AC0000000000000000000004 /* ConfettiSwiftUI */,);
+            mainGroup = E7C305DE071687A723CC7FD4;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F845986340CEB5C53CB6FE9D /* Products */;
@@ -208,6 +227,12 @@
 			);
 		};
 /* End PBXProject section */
+/* Begin XCRemoteSwiftPackageReference section */
+        AC0000000000000000000004 /* ConfettiSwiftUI */ = {isa = XCRemoteSwiftPackageReference; repositoryURL = "https://github.com/simibac/ConfettiSwiftUI.git"; requirement = {kind = upToNextMajorVersion; minimumVersion = 3.0.0; }; };
+/* End XCRemoteSwiftPackageReference section */
+/* Begin XCSwiftPackageProductDependency section */
+        AC0000000000000000000002 /* ConfettiSwiftUI */ = {isa = XCSwiftPackageProductDependency; package = AC0000000000000000000004 /* ConfettiSwiftUI */; productName = ConfettiSwiftUI; };
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin PBXSourcesBuildPhase section */
 		2F008FDB8CAB53F7F038A916 /* Sources */ = {
@@ -217,6 +242,10 @@
 				ABE26FCB8FAF1A95C8B88CB4 /* AlarmsView.swift in Sources */,
 				FB0EA15D3710AF193E7449C6 /* CalendarEvent.swift in Sources */,
 				48B2BF2358DBAD0446BC0236 /* CalendarView.swift in Sources */,
+				7C2349C339B294F6C73B70D3 /* IntelligentEventParser.swift in Sources */,
+				D61CA6F7D124D349E2EAC398 /* LaunchEffectsView.swift in Sources */,
+				33342CE3A564D43200B299A4 /* LaunchAppearance.swift in Sources */,
+				E1B9819F5D601473247EF529 /* EventFeedbackView.swift in Sources */,
 				787731F41C15EBE1B64C5BFC /* PublicEventComposer.swift in Sources */,
 				3F983939C11F93FBA6FD9BDE /* ConvexAccount.swift in Sources */,
 				B136915E76A9DD08675C3C87 /* PublicEventsView.swift in Sources */,

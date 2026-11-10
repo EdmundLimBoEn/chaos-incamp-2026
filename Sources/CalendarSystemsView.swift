@@ -50,7 +50,7 @@ struct CalendarSystemsView: View {
                         }
                     }
                     Text("Events keep their original dates and times. This adds a second date label.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(LaunchAppearance.palette.secondary)
                 }
                 Section("Compare dates") {
                     DatePicker("Date", selection: $date, displayedComponents: .date)
@@ -62,7 +62,7 @@ struct CalendarSystemsView: View {
                             HStack {
                                 Text(system.name).font(.headline)
                                 Spacer()
-                                Text(system.kind).font(.caption).foregroundStyle(.secondary)
+                                Text(system.kind).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                             }
                             Text(CalendarSystems.label(for: date, system: system.id) ?? "")
                                 .font(.subheadline)

@@ -53,7 +53,7 @@ struct EventEditor: View {
                     DatePicker("Ends", selection: $end, displayedComponents: isAllDay ? [.date] : [.date, .hourAndMinute])
                     if !isAllDay && end <= start {
                         Text("Choose an end after the start.")
-                            .font(.caption).foregroundStyle(.red)
+                            .font(.caption).foregroundStyle(LaunchAppearance.palette.danger)
                     }
                 }
                 Section("Reminder") {
@@ -67,7 +67,7 @@ struct EventEditor: View {
                         Text("1 day before").tag(1440)
                     }
                     Text("Local notifications work offline. Delivery follows your notification and Focus settings.")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                 }
                 Section("Color") {
                     HStack(spacing: 20) {
@@ -102,7 +102,7 @@ struct EventEditor: View {
                 }
                 Section {
                     Label("Saved on this iPhone. Works offline.", systemImage: "internaldrive")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(LaunchAppearance.palette.secondary)
                 }
                 if event != nil {
                     Section {

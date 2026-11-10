@@ -23,7 +23,7 @@ struct DayTimeline: View {
                             ForEach(0..<24) { hour in
                                 HStack(alignment: .top, spacing: 8) {
                                     Text(String(format: "%02d:00", hour)).font(.caption.monospacedDigit())
-                                        .foregroundStyle(.secondary).frame(width: gutter - 8)
+                                        .foregroundStyle(LaunchAppearance.palette.secondary).frame(width: gutter - 8)
                                     Rectangle().fill(.primary.opacity(0.15)).frame(height: 0.5)
                                 }.offset(y: CGFloat(hour) * hourHeight).id(hour)
                             }
@@ -33,7 +33,7 @@ struct DayTimeline: View {
                                     VStack(alignment: .leading, spacing: 3) {
                                         if item.conflict {
                                             Label("Overlap", systemImage: "exclamationmark.triangle.fill")
-                                                .font(.system(size: 9, weight: .bold)).foregroundStyle(.red)
+                                                .font(.system(size: 9, weight: .bold)).foregroundStyle(LaunchAppearance.palette.danger)
                                         }
                                         Text(item.event.title).font(.caption.bold()).lineLimit(2)
                                         Text(item.event.start.formatted(date: .omitted, time: .shortened))
@@ -42,7 +42,7 @@ struct DayTimeline: View {
                                     }.padding(6).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                                         .foregroundStyle(item.event.color.tint)
                                         .background(item.event.color.tint.opacity(0.23), in: RoundedRectangle(cornerRadius: 7))
-                                        .overlay { RoundedRectangle(cornerRadius: 7).stroke(item.conflict ? Color.red : item.event.color.tint.opacity(0.5), lineWidth: item.conflict ? 2 : 1) }
+                                        .overlay { RoundedRectangle(cornerRadius: 7).stroke(item.conflict ? LaunchAppearance.palette.danger : item.event.color.tint.opacity(0.5), lineWidth: item.conflict ? 2 : 1) }
                                 }.buttonStyle(.plain)
                                     .frame(width: max(1, width - 4), height: max(18, CGFloat(item.end - item.start) / 60 * hourHeight - 2))
                                     .offset(x: gutter + CGFloat(item.column) * width, y: CGFloat(item.start) / 60 * hourHeight)
@@ -53,8 +53,8 @@ struct DayTimeline: View {
                                     let components = Calendar.current.dateComponents([.hour, .minute], from: context.date)
                                     HStack(spacing: 0) {
                                         Text(context.date.formatted(date: .omitted, time: .shortened)).font(.system(size: 9, weight: .bold))
-                                            .padding(3).background(.red, in: Capsule()).frame(width: gutter)
-                                        Rectangle().fill(.red).frame(height: 2)
+                                            .padding(3).background(LaunchAppearance.palette.danger, in: Capsule()).frame(width: gutter)
+                                        Rectangle().fill(LaunchAppearance.palette.danger).frame(height: 2)
                                     }.offset(y: CGFloat((components.hour ?? 0) * 60 + (components.minute ?? 0)) / 60 * hourHeight)
                                 }.allowsHitTesting(false)
                             }

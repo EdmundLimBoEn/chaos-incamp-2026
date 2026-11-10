@@ -4,6 +4,7 @@ private enum CalendarMode: String, CaseIterable { case year = "Year", month = "M
 
 struct CalendarView: View {
     @Bindable var store: EventStore
+    @AppStorage("paletteRevision") private var revision = 0
     @AppStorage("accentColor") private var accentKey = "red"
     @AppStorage("compactCalendar") private var compact = false
     @AppStorage("secondaryCalendar") private var secondaryCalendar = "none"
@@ -32,7 +33,7 @@ struct CalendarView: View {
                 case .day: dayView
                 }
             }
-            .background(Color(uiColor: .systemBackground))
+            .background(LaunchAppearance.palette.background)
             .safeAreaInset(edge: .bottom) { bottomBar }
             .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $searching) { EventSearchView(store: store) }
@@ -52,7 +53,7 @@ struct CalendarView: View {
         VStack(alignment: .leading, spacing: 18) {
             HStack {
                 Label("On this device", systemImage: "internaldrive")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                 Spacer()
                 Menu {
                     Button("Create public event", systemImage: "globe.badge.chevron.backward") { publishEvent = true }
@@ -70,7 +71,7 @@ struct CalendarView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(selected.formatted(.dateTime.year())).font(.subheadline).foregroundStyle(accent)
                     if let secondary = CalendarSystems.label(for: selected, system: secondaryCalendar) {
-                        Text(secondary).font(.caption).foregroundStyle(.secondary)
+                        Text(secondary).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                     }
                     Text(mode == .year ? "Your year" : selected.formatted(.dateTime.month(.wide)))
                         .font(.system(size: 38, weight: .bold, design: .rounded))
@@ -137,7 +138,7 @@ struct CalendarView: View {
                     }
                 }
                 if store.events(on: selected).isEmpty {
-                    Text("Room for something good.").foregroundStyle(.secondary).padding(.top, 28)
+                    Text("Room for something good.").foregroundStyle(LaunchAppearance.palette.secondary).padding(.top, 28)
                 }
             }.padding(.horizontal, 12)
         }
@@ -147,7 +148,7 @@ struct CalendarView: View {
         HStack(spacing: 0) {
             ForEach(0..<7) { index in
                 let symbol = calendar.veryShortStandaloneWeekdaySymbols[(calendar.firstWeekday - 1 + index) % 7]
-                Text(symbol).font(.caption).foregroundStyle(.secondary).frame(maxWidth: .infinity)
+                Text(symbol).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary).frame(maxWidth: .infinity)
             }
         }.padding(.vertical, 12)
     }
@@ -184,7 +185,7 @@ struct CalendarView: View {
             LazyVStack(spacing: 10) {
                 ForEach(store.activeEvents.filter { $0.title.localizedCaseInsensitiveContains(search) || $0.notes.localizedCaseInsensitiveContains(search) }.sorted { $0.start < $1.start }) { event in
                     VStack(alignment: .leading) {
-                        Text(event.start.formatted(date: .abbreviated, time: .omitted)).font(.caption).foregroundStyle(.secondary)
+                        Text(event.start.formatted(date: .abbreviated, time: .omitted)).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                         eventButton(event)
                     }
                 }
@@ -196,7 +197,7 @@ struct CalendarView: View {
         HStack {
             Button("Today") { selected = Date(); searching = false }.font(.headline)
             Spacer()
-            Text("sstincky calander").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            Text("sstincky calander").font(.caption.weight(.semibold)).foregroundStyle(LaunchAppearance.palette.secondary)
             Spacer()
             Button { editing = nil; editor = true } label: { Label("Create event", systemImage: "plus.circle.fill") }.font(.headline)
         }.padding(.horizontal, 24).padding(.vertical, 16).background(.ultraThinMaterial, in: Capsule()).padding(.horizontal, 18).padding(.bottom, 8)

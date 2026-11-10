@@ -17,6 +17,10 @@ settings:
     INFOPLIST_KEY_CFBundleDisplayName: sstincky calander
     INFOPLIST_KEY_NSAlarmKitUsageDescription: Schedule alarms you create, even when this app is closed.
     CODE_SIGN_STYLE: Automatic
+packages:
+  ConfettiSwiftUI:
+    url: https://github.com/simibac/ConfettiSwiftUI.git
+    from: 3.0.0
 targets:
   sstincky calander:
     type: application
@@ -27,6 +31,7 @@ targets:
       properties:
         NSAlarmKitUsageDescription: Schedule alarms you create, even when this app is closed.
     dependencies:
+      - package: ConfettiSwiftUI
       - target: CalendarWidget
         embed: true
     entitlements:

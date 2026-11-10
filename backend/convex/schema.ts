@@ -42,6 +42,16 @@ export default defineSchema({
   }).index("by_public_start", ["published", "start"])
     .index("by_owner", ["owner"])
     .searchIndex("search_public", { searchField: "searchText", filterFields: ["published", "hostId"] }),
+  eventFeedback: defineTable({
+    listingId: v.id("publicListings"),
+    userId: v.id("users"),
+    rating: v.number(),
+    message: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_listing", ["listingId"])
+    .index("by_author", ["userId"])
+    .index("by_listing_author", ["listingId", "userId"]),
   agentGrants: defineTable({
     owner: v.string(),
     agentSubject: v.string(),

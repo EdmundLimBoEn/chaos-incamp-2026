@@ -12,7 +12,14 @@ struct EventSearchView: View {
     @State private var showEditor = false
     @State private var editing: CalendarEvent?
     @State private var draft: CalendarEvent?
-    private var parsed: EventSearchQuery { EventSearchQuery(raw: query) }
+    @State private var interpreted: EventSearchQuery?
+    @State private var interpretedInput = ""
+    @State private var intelligenceStatus = ""
+    @State private var interpreting = false
+    @State private var discover = false
+    private var parsed: EventSearchQuery {
+        interpretedInput == query ? (interpreted ?? EventSearchQuery(raw: query)) : EventSearchQuery(raw: query)
+    }
     private var tags: [String] { Array(Set(store.activeEvents.flatMap { $0.tags ?? [] })).sorted() }
 
     private var results: [CalendarEvent] {
@@ -39,10 +46,16 @@ struct EventSearchView: View {
     var body: some View {
         NavigationStack {
             List {
+                if query.isEmpty { PublicDiscoveryPreview(store: store) }
                 Section {
+                    Button("Discover public events", systemImage: "globe") { discover = true }
                     Text("Try “design tomorrow at 3pm”, “@Alex” or “#work”.")
-                        .font(.caption).foregroundStyle(.secondary)
-                    if !query.isEmpty { Text(parsed.querySummary).font(.caption).foregroundStyle(.tint) }
+                        .font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
+                    if !query.isEmpty {
+                        Text(parsed.querySummary).font(.caption).foregroundStyle(.tint)
+                        if interpreting { ProgressView("Understanding your request…").font(.caption) }
+                        else if !intelligenceStatus.isEmpty { Text(intelligenceStatus).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary) }
+                    }
                 }
                 Section("Filters") {
                     Picker("When", selection: $dateFilter) {
@@ -76,10 +89,10 @@ struct EventSearchView: View {
                             HStack(alignment: .top, spacing: 10) {
                                 Circle().fill(event.color.tint).frame(width: 8, height: 8).padding(.top, 5)
                                 VStack(alignment: .leading, spacing: 5) {
-                                    Text(event.title).font(.headline).foregroundStyle(.primary)
-                                    Text(event.start.formatted(date: .abbreviated, time: event.isAllDay ? .omitted : .shortened)).font(.caption).foregroundStyle(.secondary)
+                                    Text(event.title).font(.headline).foregroundStyle(LaunchAppearance.palette.foreground)
+                                    Text(event.start.formatted(date: .abbreviated, time: event.isAllDay ? .omitted : .shortened)).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                                     let people = (event.people ?? []) + (event.hostName.map { [$0] } ?? [])
-                                    if !people.isEmpty { Label(people.joined(separator: ", "), systemImage: "person.2").font(.caption).foregroundStyle(.secondary) }
+                                    if !people.isEmpty { Label(people.joined(separator: ", "), systemImage: "person.2").font(.caption).foregroundStyle(LaunchAppearance.palette.secondary) }
                                     if !(event.tags ?? []).isEmpty { Text((event.tags ?? []).map { "#" + $0 }.joined(separator: " ")).font(.caption).foregroundStyle(.tint) }
                                 }
                             }
@@ -91,13 +104,34 @@ struct EventSearchView: View {
                         Button {
                             editing = nil; draft = parsed.draft(); showEditor = true
                         } label: { Label("Create “\(parsed.draft().title)”", systemImage: "plus.circle.fill") }
-                        Text("Review the suggested title, date and time before saving.").font(.caption).foregroundStyle(.secondary)
+                        Text(parsed.draft().start.formatted(date: .complete, time: .shortened))
+                            .font(.subheadline).foregroundStyle(LaunchAppearance.palette.secondary)
+                        if !(parsed.draft().people ?? []).isEmpty {
+                            Text("With " + (parsed.draft().people ?? []).joined(separator: ", ")).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
+                        }
+                        Text("Review the suggested title, date and time before saving.").font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                     }
                 }
             }
             .navigationTitle("Search & filter")
             .searchable(text: $query, prompt: "Events, people, dates, times, tags")
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .sheet(isPresented: $discover) { PublicEventsView(store: store) }
+            .task(id: query) {
+                interpreted = nil
+                interpretedInput = ""
+                intelligenceStatus = ""
+                guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { interpreting = false; return }
+                interpreting = true
+                do { try await Task.sleep(for: .milliseconds(500)) } catch { return }
+                let input = query
+                let result = await IntelligentEventParser.interpret(input)
+                guard !Task.isCancelled, query == input else { return }
+                interpreted = result.query
+                interpretedInput = input
+                intelligenceStatus = result.status
+                interpreting = false
+            }
             .sheet(isPresented: $showEditor) { EventEditor(store: store, date: Date(), event: editing, draft: draft) }
         }
     }

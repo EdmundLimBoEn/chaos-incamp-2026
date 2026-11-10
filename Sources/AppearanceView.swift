@@ -2,13 +2,19 @@ import SwiftUI
 
 enum CalendarAppearance {
     static func accent(_ key: String) -> Color {
+        LaunchAppearance.color("accent", fallback: baseAccent(key))
+    }
+
+    static func baseAccent(_ key: String) -> Color {
+        let base: Color
         switch key {
-        case "teal": .teal
-        case "blue": .blue
-        case "purple": .purple
-        case "orange": .orange
-        default: .red
+        case "teal": base = .teal
+        case "blue": base = .blue
+        case "purple": base = .purple
+        case "orange": base = .orange
+        default: base = .red
         }
+        return base
     }
 
     static func scheme(_ key: String) -> ColorScheme? {
@@ -24,12 +30,25 @@ struct AppearanceView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage("appearanceTheme") private var theme = "dark"
     @AppStorage("accentColor") private var accent = "red"
+    @AppStorage("randomnessMode") private var randomness = "normal"
+    @AppStorage("paletteRevision") private var paletteRevision = 0
+    @AppStorage("launchConfetti") private var launchConfetti = true
+    @AppStorage("launchSounds") private var launchSounds = false
     @AppStorage("compactCalendar") private var compact = false
     private let accents = ["red", "teal", "blue", "purple", "orange"]
 
     var body: some View {
         NavigationStack {
             Form {
+                Section("On each open") {
+                    Picker("Theme mode", selection: $randomness) {
+                        Text("Normal").tag("normal")
+                        Text("A little random").tag("subtle")
+                        Text("Crazy random").tag("crazy")
+                    }
+                    Text(randomness == "crazy" ? "Every app palette color gets a fresh random RGB value. Expect unexpected combinations." : randomness == "subtle" ? "A different accent color each time you open the app." : "Keep your chosen theme and accent color.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
                 Section("Theme") {
                     Picker("Appearance", selection: $theme) {
                         Text("Dark").tag("dark")
@@ -41,7 +60,7 @@ struct AppearanceView: View {
                     HStack(spacing: 20) {
                         ForEach(accents, id: \.self) { value in
                             Button { accent = value } label: {
-                                Circle().fill(CalendarAppearance.accent(value))
+                                Circle().fill(CalendarAppearance.baseAccent(value))
                                     .frame(width: 34, height: 34)
                                     .overlay {
                                         if value == accent {
@@ -54,6 +73,10 @@ struct AppearanceView: View {
                             .accessibilityAddTraits(value == accent ? .isSelected : [])
                         }
                     }.padding(.vertical, 6)
+                }
+                Section("Launch effects") {
+                    Toggle("Confetti on open", isOn: $launchConfetti)
+                    Toggle("Random chime on open", isOn: $launchSounds)
                 }
                 Section("Calendar") {
                     Toggle("Compact month view", isOn: $compact)
@@ -90,6 +113,7 @@ struct AppearanceView: View {
                 }
             }
         }
+        .onChange(of: randomness) { _, _ in LaunchAppearance.refreshForLaunch() }
         .tint(CalendarAppearance.accent(accent))
         .preferredColorScheme(CalendarAppearance.scheme(theme))
     }
