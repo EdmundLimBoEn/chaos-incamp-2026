@@ -69,7 +69,7 @@ struct PublicEventsView: View {
                             }.buttonStyle(.borderedProminent)
                             Button("Add to my calendar", systemImage: "calendar.badge.plus") {
                                 importEvent = listing
-                            }
+                            }.buttonStyle(.bordered)
                         }.padding(.vertical, 4)
                     }.listRowBackground(LaunchAppearance.palette.surface)
                 }.listRowBackground(LaunchAppearance.palette.surface)
@@ -133,6 +133,8 @@ struct PublicDiscoveryPreview: View {
     @AppStorage("paletteRevision") private var paletteRevision = 0
     @AppStorage("appearanceTheme") private var activeTheme = "dark"
     let store: EventStore
+    @State private var importEvent: PublicListing?
+    @State private var feedbackEvent: PublicListing?
     @State private var listings: [PublicListing] = []
     @State private var loading = true
     @State private var error: String?
@@ -140,19 +142,27 @@ struct PublicDiscoveryPreview: View {
         Section("Public events · discover without searching") {
             if loading { ProgressView("Loading public events…") }
             ForEach(listings) { event in
-                NavigationLink {
-                    EventFeedbackView(event: event)
-                } label: {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(event.title).font(.headline)
-                        Text(Date(timeIntervalSince1970: event.start / 1000).formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
-                        if let host = event.host { Text("Hosted by " + host.displayName).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary) }
-                    }
+                VStack(alignment: .leading, spacing: 10) {
+                    Button { importEvent = event } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(event.title).font(.headline)
+                            Text(Date(timeIntervalSince1970: event.start / 1000).formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
+                            if let host = event.host { Text("Hosted by " + host.displayName).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary) }
+                        }.frame(maxWidth: .infinity, alignment: .leading)
+                    }.buttonStyle(.plain)
+                    Button("Add to my calendar", systemImage: "calendar.badge.plus") { importEvent = event }
+                        .buttonStyle(.borderedProminent)
+                    Button("Leave feedback", systemImage: "star.bubble") { feedbackEvent = event }
+                        .buttonStyle(.borderless)
                 }
             }.listRowBackground(LaunchAppearance.palette.surface)
             if !loading && listings.isEmpty { Text(error ?? "No public events yet. Publish the first one from Discover.").font(.caption).foregroundStyle(LaunchAppearance.palette.secondary) }
             NavigationLink("Browse all public events") { PublicEventsView(store: store) }
         }.listRowBackground(LaunchAppearance.palette.surface)
+        .sheet(item: $importEvent) { listing in
+            EventEditor(store: store, date: Date(timeIntervalSince1970: listing.start / 1000), draft: listing.calendarDraft).id(listing.id)
+        }
+        .sheet(item: $feedbackEvent) { EventFeedbackView(event: $0) }
         .task {
             do {
                 var request = URLRequest(url: ConvexAccount.baseURL.appendingPathComponent("api/query"))
