@@ -19,6 +19,7 @@ struct SstinckyCalanderApp: App {
                 HostedEventsView(store: store, isTab: true)
                     .tabItem { Label("Feedback", systemImage: "star.bubble.fill") }
             }
+                .background { InteractionThemeObserver().frame(width: 0, height: 0) }
                 .overlay { LaunchEffectsView().id(launchID) }
                 .foregroundStyle(LaunchAppearance.palette.foreground)
                 .background(LaunchAppearance.palette.background)

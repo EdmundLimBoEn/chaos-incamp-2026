@@ -6,7 +6,7 @@ enum LaunchAppearance {
     static func refreshForLaunch() {
         let defaults = UserDefaults.standard
         let mode = defaults.string(forKey: "randomnessMode") ?? "normal"
-        if mode == "crazy" {
+        if mode == "crazy" || mode == "interactive" {
             for role in roles {
                 defaults.set((0..<3).map { _ in Double.random(in: 0...1) }, forKey: "launchPalette." + role)
             }
@@ -24,7 +24,7 @@ enum LaunchAppearance {
     static func color(_ role: String, fallback: Color) -> Color {
         let defaults = UserDefaults.standard
         let mode = defaults.string(forKey: "randomnessMode") ?? "normal"
-        guard mode == "crazy" || (mode == "subtle" && role == "accent"),
+        guard mode == "crazy" || mode == "interactive" || (mode == "subtle" && role == "accent"),
               let components = defaults.array(forKey: "launchPalette." + role) as? [Double], components.count == 3 else { return fallback }
         return Color(red: components[0], green: components[1], blue: components[2])
     }
@@ -48,4 +48,42 @@ struct LaunchPalette {
     let secondary: Color
     let surface: Color
     let danger: Color
+}
+
+
+struct InteractionThemeObserver: UIViewRepresentable {
+    func makeUIView(context: Context) -> ThemeInteractionSensor { ThemeInteractionSensor() }
+    func updateUIView(_ uiView: ThemeInteractionSensor, context: Context) {}
+}
+
+final class ThemeInteractionSensor: UIView, UIGestureRecognizerDelegate {
+    private weak var observedWindow: UIWindow?
+    private var recognizers: [UIGestureRecognizer] = []
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        guard window !== observedWindow else { return }
+        for recognizer in recognizers { observedWindow?.removeGestureRecognizer(recognizer) }
+        recognizers.removeAll()
+        observedWindow = window
+        guard let window else { return }
+        let tap = UITapGestureRecognizer(target: self, action: #selector(interacted(_:)))
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(interacted(_:)))
+        for recognizer in [tap as UIGestureRecognizer, pan] {
+            recognizer.cancelsTouchesInView = false
+            recognizer.delaysTouchesBegan = false
+            recognizer.delaysTouchesEnded = false
+            recognizer.delegate = self
+            window.addGestureRecognizer(recognizer)
+            recognizers.append(recognizer)
+        }
+    }
+
+    @objc private func interacted(_ recognizer: UIGestureRecognizer) {
+        guard recognizer.state == .ended,
+              UserDefaults.standard.string(forKey: "randomnessMode") == "interactive" else { return }
+        LaunchAppearance.refreshForLaunch()
+    }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool { true }
 }

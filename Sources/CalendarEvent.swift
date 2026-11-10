@@ -6,7 +6,7 @@ enum EventColor: String, Codable, CaseIterable, Identifiable {
     case teal, blue, orange, purple, pink
     var id: String { rawValue }
     var tint: Color {
-        if UserDefaults.standard.string(forKey: "randomnessMode") == "crazy",
+        if ["crazy", "interactive"].contains(UserDefaults.standard.string(forKey: "randomnessMode") ?? "normal"),
            let rgb = UserDefaults.standard.array(forKey: "launchPalette." + rawValue) as? [Double], rgb.count == 3 {
             return Color(red: rgb[0], green: rgb[1], blue: rgb[2])
         }

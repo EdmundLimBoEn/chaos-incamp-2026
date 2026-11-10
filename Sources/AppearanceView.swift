@@ -50,8 +50,9 @@ struct AppearanceView: View {
                         Text("Normal").tag("normal")
                         Text("A little random").tag("subtle")
                         Text("Crazy random").tag("crazy")
+                        Text("Slightly random").tag("interactive")
                     }
-                    Text(randomness == "crazy" ? "Every app palette color gets a fresh random RGB value. Expect unexpected combinations." : randomness == "subtle" ? "A different accent color each time you open the app." : "Keep your chosen theme and accent color.")
+                    Text(randomness == "interactive" ? "A fresh random RGB palette after every tap, swipe or screen change." : randomness == "crazy" ? "Every app palette color gets a fresh random RGB value. Expect unexpected combinations." : randomness == "subtle" ? "A different accent color each time you open the app." : "Keep your chosen theme and accent color.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Section("Theme") {
