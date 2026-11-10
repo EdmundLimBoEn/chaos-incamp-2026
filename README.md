@@ -4,7 +4,7 @@ Offline SwiftUI calendar prototype. Open `sstincky calander.xcodeproj` in Xcode,
 
 Year, month and day views; search; create, edit and delete events. Sample events appear on first launch. Data stays in Application Support as atomic JSON.
 
-Minimum: iOS 17. AlarmKit alarms require iOS 26 or later. Generated with XcodeGen (`xcodegen generate`). This machine has Xcode 27.1; no build or simulator run was performed.
+Minimum: iOS 26.3. AlarmKit alarms require iOS 26 or later. Generated with XcodeGen (`xcodegen generate`). This machine has Xcode 27.1; no build or simulator run was performed.
 
 Convex sync is not connected. Stable event IDs, update timestamps and deletion tombstones are included for a later sync adapter. Local event reminders and AlarmKit alarms are included. Overlapping timed events appear side by side with red conflict borders. Recurrence is not implemented. Notification and alarm permission are requested when needed. The nearest 60 event reminders are scheduled; opening the app refreshes the queue.
 
