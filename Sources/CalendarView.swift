@@ -19,7 +19,7 @@ struct CalendarView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selected = Date()
-    @State private var mode = CalendarMode.week
+    @State private var mode = CalendarMode.day
     @State private var appearance = false
     @State private var calendarSystems = false
     @State private var alarms = false
@@ -245,6 +245,10 @@ struct CalendarView: View {
     private var dayView: some View {
         VStack(spacing: 8) {
             weekStrip
+            Text(selected.formatted(.dateTime.weekday(.wide).day().month(.wide)))
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(palette.foreground)
+            Divider()
             DayTimeline(events: selectedEvents, date: selected) { event in
                 editor = CalendarEditorSelection(event: event, draft: nil)
             }

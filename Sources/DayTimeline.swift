@@ -95,8 +95,8 @@ struct DayTimeline: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
                         Text(item.event.title)
-                            .font(.caption.weight(.semibold))
-                            .lineLimit(height < 52 ? 1 : 2)
+                            .font(.subheadline.weight(.semibold))
+                            .lineLimit(height < 52 ? 1 : height >= 130 ? 4 : 2)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         if item.conflict {
                             Image(systemName: "exclamationmark.circle.fill")
@@ -107,13 +107,13 @@ struct DayTimeline: View {
                     }
                     if height >= 60 {
                         Text(item.event.start.formatted(date: .omitted, time: .shortened) + " – " + item.event.end.formatted(date: .omitted, time: .shortened))
-                            .font(.caption2)
+                            .font(.caption)
                             .foregroundStyle(LaunchAppearance.palette.secondary)
                             .lineLimit(1)
                     }
                     if height >= 100 && !item.event.location.isEmpty {
                         Label(item.event.location, systemImage: "location")
-                            .font(.caption2)
+                            .font(.caption)
                             .foregroundStyle(LaunchAppearance.palette.secondary)
                             .lineLimit(2)
                     }
@@ -124,12 +124,12 @@ struct DayTimeline: View {
             .padding(.vertical, height < 40 ? 5 : 9)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .foregroundStyle(LaunchAppearance.palette.foreground)
-            .background(item.event.color.tint.opacity(0.16), in: RoundedRectangle(cornerRadius: 10))
+            .background(item.event.color.tint.opacity(0.20), in: RoundedRectangle(cornerRadius: 5))
             .overlay {
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: 5)
                     .stroke(item.conflict ? LaunchAppearance.palette.danger : item.event.color.tint.opacity(0.3), lineWidth: item.conflict ? 1.5 : 0.5)
             }
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .clipShape(RoundedRectangle(cornerRadius: 5))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(item.event.title + ", " + item.event.start.formatted(date: .omitted, time: .shortened) + " to " + item.event.end.formatted(date: .omitted, time: .shortened) + (item.conflict ? ", overlaps another event" : ""))
