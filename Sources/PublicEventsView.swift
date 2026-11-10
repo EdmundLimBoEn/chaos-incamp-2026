@@ -17,7 +17,7 @@ private struct ConvexResponse: Decodable { let status: String; let value: Listin
 struct PublicEventsView: View {
     let store: EventStore
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("convexDeploymentURL") private var deploymentURL = ""
+    @AppStorage("convexDeploymentURL") private var deploymentURL = "https://majestic-vulture-890.convex.cloud"
     @State private var query = ""
     @State private var tag = ""
     @State private var listings: [PublicListing] = []
