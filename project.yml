@@ -2,7 +2,7 @@ name: sstincky calander
 options:
   bundleIdPrefix: systems.edmundlim
   deploymentTarget:
-    iOS: '27.3'
+    iOS: '17.0'
 settings:
   base:
     SWIFT_VERSION: '6.0'

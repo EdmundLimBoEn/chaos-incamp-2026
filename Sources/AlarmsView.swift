@@ -1,11 +1,36 @@
 import AlarmKit
 import SwiftUI
 
+@available(iOS 26.0, *)
 private struct CalendarAlarmMetadata: AlarmMetadata {
     var title: String
 }
 
 struct AlarmsView: View {
+    @Environment(\.dismiss) private var dismiss
+    var body: some View {
+        if #available(iOS 26.0, *) {
+            AlarmKitView()
+        } else {
+            NavigationStack {
+                VStack(spacing: 16) {
+                    TimelineView(.periodic(from: .now, by: 1)) { context in
+                        Text(context.date, style: .time)
+                            .font(.system(size: 52, weight: .light, design: .rounded))
+                    }
+                    Text("Alarms require iOS 26 or later.")
+                    Text("Event reminders still work on this device.")
+                        .foregroundStyle(.secondary)
+                }
+                .navigationTitle("Clock")
+                .toolbar { Button("Done") { dismiss() } }
+            }
+        }
+    }
+}
+
+@available(iOS 26.0, *)
+private struct AlarmKitView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var date = Date().addingTimeInterval(300)
     @State private var title = "Time to get going"
