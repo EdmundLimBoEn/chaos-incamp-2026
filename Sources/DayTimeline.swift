@@ -24,7 +24,7 @@ struct DayTimeline: View {
                                 HStack(alignment: .top, spacing: 8) {
                                     Text(String(format: "%02d:00", hour)).font(.caption.monospacedDigit())
                                         .foregroundStyle(.secondary).frame(width: gutter - 8)
-                                    Rectangle().fill(.white.opacity(0.15)).frame(height: 0.5)
+                                    Rectangle().fill(.primary.opacity(0.15)).frame(height: 0.5)
                                 }.offset(y: CGFloat(hour) * hourHeight).id(hour)
                             }
                             ForEach(placements) { item in

@@ -1,7 +1,14 @@
 {
   "name": "sstincky-calendar-backend",
   "private": true,
-  "scripts": { "dev": "convex dev", "deploy": "convex deploy" },
-  "dependencies": { "convex": "^1.0.0" },
-  "devDependencies": { "typescript": "^5.0.0" }
+  "scripts": {
+    "dev": "convex dev",
+    "deploy": "convex deploy"
+  },
+  "dependencies": {
+    "convex": "^1.49.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
 }

@@ -4,6 +4,13 @@ private enum CalendarMode: String, CaseIterable { case year = "Year", month = "M
 
 struct CalendarView: View {
     @Bindable var store: EventStore
+    @AppStorage("accentColor") private var accentKey = "red"
+    @AppStorage("compactCalendar") private var compact = false
+    @AppStorage("secondaryCalendar") private var secondaryCalendar = "none"
+    @State private var appearance = false
+    @State private var discover = false
+    @State private var calendarSystems = false
+    private var accent: Color { CalendarAppearance.accent(accentKey) }
     @State private var selected = Date()
     @State private var mode = CalendarMode.month
     @State private var alarms = false
@@ -18,22 +25,19 @@ struct CalendarView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 header
-                if searching {
-                    TextField("Search events", text: $search)
-                        .textFieldStyle(.roundedBorder).padding(.horizontal).padding(.bottom, 12)
-                }
-                if searching && !search.isEmpty { searchResults }
-                else {
-                    switch mode {
-                    case .year: yearView
-                    case .month: monthView
-                    case .day: dayView
-                    }
+                switch mode {
+                case .year: yearView
+                case .month: monthView
+                case .day: dayView
                 }
             }
-            .background(Color.black)
+            .background(Color(uiColor: .systemBackground))
             .safeAreaInset(edge: .bottom) { bottomBar }
             .toolbar(.hidden, for: .navigationBar)
+            .sheet(isPresented: $searching) { EventSearchView(store: store) }
+            .sheet(isPresented: $discover) { PublicEventsView(store: store) }
+            .sheet(isPresented: $appearance) { AppearanceView() }
+            .sheet(isPresented: $calendarSystems) { CalendarSystemsView() }
             .sheet(isPresented: $alarms) { AlarmsView() }
             .sheet(isPresented: $editor) { EventEditor(store: store, date: selected, event: editing) }
             .alert("Couldn’t save changes", isPresented: Binding(get: { store.errorMessage != nil }, set: { if !$0 { store.errorMessage = nil } })) {
@@ -48,6 +52,11 @@ struct CalendarView: View {
                 Label("On this device", systemImage: "internaldrive")
                     .font(.caption).foregroundStyle(.secondary)
                 Spacer()
+                Menu {
+                    Button("Discover public events", systemImage: "globe") { discover = true }
+                    Button("Appearance", systemImage: "paintpalette") { appearance = true }
+                    Button("Calendar systems", systemImage: "moonphase.waning.crescent") { calendarSystems = true }
+                } label: { Image(systemName: "slider.horizontal.3").frame(width: 36, height: 40) }
                 Button { alarms = true } label: { Image(systemName: "alarm").frame(width: 40, height: 40) }.accessibilityLabel("Clocks and alarms")
                 Button { searching.toggle() } label: { Image(systemName: "magnifyingglass").frame(width: 40, height: 40) }
                     .accessibilityLabel("Search events")
@@ -56,7 +65,10 @@ struct CalendarView: View {
             }
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(selected.formatted(.dateTime.year())).font(.subheadline).foregroundStyle(.red)
+                    Text(selected.formatted(.dateTime.year())).font(.subheadline).foregroundStyle(accent)
+                    if let secondary = CalendarSystems.label(for: selected, system: secondaryCalendar) {
+                        Text(secondary).font(.caption).foregroundStyle(.secondary)
+                    }
                     Text(mode == .year ? "Your year" : selected.formatted(.dateTime.month(.wide)))
                         .font(.system(size: 38, weight: .bold, design: .rounded))
                 }
@@ -77,12 +89,12 @@ struct CalendarView: View {
                     let date = calendar.date(from: DateComponents(year: calendar.component(.year, from: selected), month: month, day: 1))!
                     Button { selected = date; mode = .month } label: {
                         VStack(alignment: .leading, spacing: 10) {
-                            Text(date.formatted(.dateTime.month(.abbreviated))).font(.headline).foregroundStyle(.red)
+                            Text(date.formatted(.dateTime.month(.abbreviated))).font(.headline).foregroundStyle(accent)
                             LazyVGrid(columns: columns, spacing: 6) {
                                 ForEach(Array(days(in: date).enumerated()), id: \.offset) { _, day in
                                     Text(day.map { String(calendar.component(.day, from: $0)) } ?? " ")
                                         .font(.system(size: 9, weight: .medium)).frame(maxWidth: .infinity)
-                                        .foregroundStyle(day.map { calendar.isDateInToday($0) } == true ? .red : .white)
+                                        .foregroundStyle(day.map { calendar.isDateInToday($0) } == true ? accent : .primary)
                                 }
                             }
                         }.frame(height: 135, alignment: .top)
@@ -104,7 +116,7 @@ struct CalendarView: View {
                                     Text(String(calendar.component(.day, from: date)))
                                         .font(.system(size: 19, weight: .medium))
                                         .frame(width: 34, height: 34)
-                                        .background(calendar.isDateInToday(date) ? Color.red : Color.clear, in: Circle())
+                                        .background(calendar.isDateInToday(date) ? accent : Color.clear, in: Circle())
                                     ForEach(store.events(on: date).prefix(3)) { event in
                                         Text(event.title).font(.system(size: 9, weight: .semibold))
                                             .lineLimit(1).padding(.horizontal, 3).padding(.vertical, 3)
@@ -114,11 +126,11 @@ struct CalendarView: View {
                                     }
                                     Spacer(minLength: 0)
                                 }
-                                .frame(maxWidth: .infinity, minHeight: 110, maxHeight: 110, alignment: .topLeading)
+                                .frame(maxWidth: .infinity, minHeight: compact ? 82 : 110, maxHeight: compact ? 82 : 110, alignment: .topLeading)
                                 .padding(.top, 9)
-                                .overlay(alignment: .top) { Rectangle().fill(.white.opacity(0.15)).frame(height: 0.5) }
+                                .overlay(alignment: .top) { Rectangle().fill(.primary.opacity(0.15)).frame(height: 0.5) }
                             }.buttonStyle(.plain)
-                        } else { Color.clear.frame(height: 110) }
+                        } else { Color.clear.frame(height: compact ? 82 : 110) }
                     }
                 }
                 if store.events(on: selected).isEmpty {

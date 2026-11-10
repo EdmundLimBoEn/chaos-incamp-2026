@@ -24,6 +24,9 @@ struct WidgetEventSnapshot: Codable {
         let upcoming = events.filter { $0.deletedAt == nil && $0.end > Date() }.map { event in
             var copy = event
             copy.notes = ""
+            copy.people = nil
+            copy.hostName = nil
+            copy.tags = nil
             copy.location = ""
             return copy
         }

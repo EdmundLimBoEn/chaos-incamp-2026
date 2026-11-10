@@ -27,4 +27,7 @@ struct CalendarEvent: Codable, Identifiable {
     var updatedAt: Date = Date()
     var deletedAt: Date? = nil
     var reminderMinutes: Int? = nil
+    var people: [String]? = nil
+    var tags: [String]? = nil
+    var hostName: String? = nil
 }

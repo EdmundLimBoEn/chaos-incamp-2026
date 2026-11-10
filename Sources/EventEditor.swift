@@ -12,20 +12,27 @@ struct EventEditor: View {
     @State private var notes: String
     @State private var color: EventColor
     @State private var reminderMinutes: Int
+    @State private var people: String
+    @State private var tags: String
+    @State private var hostName: String
     @State private var confirmingDelete = false
 
-    init(store: EventStore, date: Date, event: CalendarEvent? = nil) {
+    init(store: EventStore, date: Date, event: CalendarEvent? = nil, draft: CalendarEvent? = nil) {
         self.store = store
         self.event = event
-        let initialStart = event?.start ?? Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: date) ?? date
-        _reminderMinutes = State(initialValue: event?.reminderMinutes ?? -1)
-        _title = State(initialValue: event?.title ?? "")
+        let initial = event ?? draft
+        _people = State(initialValue: (initial?.people ?? []).joined(separator: ", "))
+        _tags = State(initialValue: (initial?.tags ?? []).joined(separator: ", "))
+        _hostName = State(initialValue: initial?.hostName ?? "")
+        let initialStart = initial?.start ?? Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: date) ?? date
+        _reminderMinutes = State(initialValue: initial?.reminderMinutes ?? -1)
+        _title = State(initialValue: initial?.title ?? "")
         _start = State(initialValue: initialStart)
-        _end = State(initialValue: event.map { $0.isAllDay ? Calendar.current.date(byAdding: .day, value: -1, to: $0.end)! : $0.end } ?? initialStart.addingTimeInterval(3600))
-        _isAllDay = State(initialValue: event?.isAllDay ?? false)
-        _location = State(initialValue: event?.location ?? "")
-        _notes = State(initialValue: event?.notes ?? "")
-        _color = State(initialValue: event?.color ?? .teal)
+        _end = State(initialValue: initial.map { $0.isAllDay ? Calendar.current.date(byAdding: .day, value: -1, to: $0.end)! : $0.end } ?? initialStart.addingTimeInterval(3600))
+        _isAllDay = State(initialValue: initial?.isAllDay ?? false)
+        _location = State(initialValue: initial?.location ?? "")
+        _notes = State(initialValue: initial?.notes ?? "")
+        _color = State(initialValue: initial?.color ?? .teal)
     }
 
     private var valid: Bool {
@@ -83,6 +90,12 @@ struct EventEditor: View {
                     }
                     .padding(.vertical, 4)
                 }
+                Section("People & tags") {
+                    TextField("People, separated by commas", text: $people)
+                    TextField("Host name", text: $hostName)
+                    TextField("Tags, separated by commas", text: $tags)
+                        .textInputAutocapitalization(.never)
+                }
                 Section("Notes") {
                     TextField("Add notes", text: $notes, axis: .vertical)
                         .lineLimit(4...8)
@@ -116,6 +129,10 @@ struct EventEditor: View {
         }
     }
 
+    private func split(_ value: String) -> [String] {
+        value.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+    }
+
     private func save() {
         guard valid else { return }
         store.upsert(CalendarEvent(
@@ -129,7 +146,10 @@ struct EventEditor: View {
             color: color,
             updatedAt: Date(),
             deletedAt: nil,
-            reminderMinutes: reminderMinutes < 0 ? nil : reminderMinutes
+            reminderMinutes: reminderMinutes < 0 ? nil : reminderMinutes,
+            people: split(people),
+            tags: split(tags).map { $0.trimmingCharacters(in: CharacterSet(charactersIn: "#")) },
+            hostName: hostName.trimmingCharacters(in: .whitespacesAndNewlines)
         ))
         dismiss()
     }

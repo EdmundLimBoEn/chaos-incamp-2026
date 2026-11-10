@@ -20,6 +20,11 @@
 		C53F84B6173B436E24FD7DAD /* ReminderScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC585BF713BF2127CB46EE31 /* ReminderScheduler.swift */; };
 		F631E7A1BE2C5695BA5F9760 /* WidgetEventSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96FF0DDDFFF3CF2BF6081D19 /* WidgetEventSnapshot.swift */; };
 		FB0EA15D3710AF193E7449C6 /* CalendarEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169654C58FAF5BA37E201145 /* CalendarEvent.swift */; };
+		B0A8B87FA4DCD5D6407DDCC9 /* EventSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A003FA7341C5FCA3A2A3118 /* EventSearch.swift */; };
+		3D8850AA41665E40A73B03BB /* EventSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CE86AE6DD1D1CBECBCD9320 /* EventSearchView.swift */; };
+		92DAE3B142A22A9176D005A9 /* AppearanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B3FC783776B09B53134A884 /* AppearanceView.swift */; };
+		4ABBBE25BE6B8741290E65BF /* CalendarSystemsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08174098CB337EB395899202 /* CalendarSystemsView.swift */; };
+		B136915E76A9DD08675C3C87 /* PublicEventsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E99A69AE47B8738B409793A2 /* PublicEventsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -49,22 +54,32 @@
 /* Begin PBXFileReference section */
 		169654C58FAF5BA37E201145 /* CalendarEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarEvent.swift; sourceTree = "<group>"; };
 		37FE6E64E26EDA84F529BE78 /* EventStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventStore.swift; sourceTree = "<group>"; };
-		3BB831302FA5D842D0F43F40 /* CalendarWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = CalendarWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		3BB831302FA5D842D0F43F40 /* CalendarWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CalendarWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		49F2A01617B1ED0455D97EAC /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
 		6C905BCFC5A094358D114A12 /* SstinckyCalanderApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SstinckyCalanderApp.swift; sourceTree = "<group>"; };
-		7106EA3522F40993F0A8534F /* sstincky calander.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "sstincky calander.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7106EA3522F40993F0A8534F /* sstincky calander.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "sstincky calander.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		794BCDE2A02E9A1D48D29A85 /* CalendarWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarWidget.swift; sourceTree = "<group>"; };
 		96FF0DDDFFF3CF2BF6081D19 /* WidgetEventSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetEventSnapshot.swift; sourceTree = "<group>"; };
 		A87D263AB7AF1F0D83C3C1D3 /* AlarmsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlarmsView.swift; sourceTree = "<group>"; };
 		C0AC6E85E1C6C6DB7AC175E9 /* EventEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventEditor.swift; sourceTree = "<group>"; };
 		CC585BF713BF2127CB46EE31 /* ReminderScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderScheduler.swift; sourceTree = "<group>"; };
 		D898C244A74395C14BD3DF7F /* DayTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayTimeline.swift; sourceTree = "<group>"; };
+		5A003FA7341C5FCA3A2A3118 /* EventSearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSearch.swift; sourceTree = "<group>"; };
+		9CE86AE6DD1D1CBECBCD9320 /* EventSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSearchView.swift; sourceTree = "<group>"; };
+		9B3FC783776B09B53134A884 /* AppearanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceView.swift; sourceTree = "<group>"; };
+		08174098CB337EB395899202 /* CalendarSystemsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarSystemsView.swift; sourceTree = "<group>"; };
+		E99A69AE47B8738B409793A2 /* PublicEventsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicEventsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
 		9B5434C9BF2FAA4D7B2E53EF /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				E99A69AE47B8738B409793A2 /* PublicEventsView.swift */,
+				08174098CB337EB395899202 /* CalendarSystemsView.swift */,
+				9B3FC783776B09B53134A884 /* AppearanceView.swift */,
+				9CE86AE6DD1D1CBECBCD9320 /* EventSearchView.swift */,
+				5A003FA7341C5FCA3A2A3118 /* EventSearch.swift */,
 				A87D263AB7AF1F0D83C3C1D3 /* AlarmsView.swift */,
 				169654C58FAF5BA37E201145 /* CalendarEvent.swift */,
 				49F2A01617B1ED0455D97EAC /* CalendarView.swift */,
@@ -196,6 +211,11 @@
 				ABE26FCB8FAF1A95C8B88CB4 /* AlarmsView.swift in Sources */,
 				FB0EA15D3710AF193E7449C6 /* CalendarEvent.swift in Sources */,
 				48B2BF2358DBAD0446BC0236 /* CalendarView.swift in Sources */,
+				B136915E76A9DD08675C3C87 /* PublicEventsView.swift in Sources */,
+				4ABBBE25BE6B8741290E65BF /* CalendarSystemsView.swift in Sources */,
+				92DAE3B142A22A9176D005A9 /* AppearanceView.swift in Sources */,
+				3D8850AA41665E40A73B03BB /* EventSearchView.swift in Sources */,
+				B0A8B87FA4DCD5D6407DDCC9 /* EventSearch.swift in Sources */,
 				B5001AE7DA38CA00FADBEFEE /* DayTimeline.swift in Sources */,
 				70870DB284ED2DD22026B054 /* EventEditor.swift in Sources */,
 				B048B805DD383E68F3E9F2EC /* EventStore.swift in Sources */,
@@ -272,6 +292,10 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				MARKETING_VERSION = 1.0;
+				INFOPLIST_KEY_CFBundleVersion = "$(CURRENT_PROJECT_VERSION)";
+				INFOPLIST_KEY_CFBundleShortVersionString = "$(MARKETING_VERSION)";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "sstincky calander";
 				INFOPLIST_KEY_NSAlarmKitUsageDescription = "Schedule alarms you create, even when this app is closed.";
@@ -296,6 +320,7 @@
 				CODE_SIGN_ENTITLEMENTS = Config/Widget.entitlements;
 				INFOPLIST_FILE = "Config/Widget-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "sstincky calander";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.3;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -313,6 +338,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Config/Calendar.entitlements;
+				INFOPLIST_FILE = "Config/App-Info.plist";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -376,6 +402,10 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				MARKETING_VERSION = 1.0;
+				INFOPLIST_KEY_CFBundleVersion = "$(CURRENT_PROJECT_VERSION)";
+				INFOPLIST_KEY_CFBundleShortVersionString = "$(MARKETING_VERSION)";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "sstincky calander";
 				INFOPLIST_KEY_NSAlarmKitUsageDescription = "Schedule alarms you create, even when this app is closed.";
@@ -399,6 +429,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Config/Calendar.entitlements;
+				INFOPLIST_FILE = "Config/App-Info.plist";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -417,6 +448,7 @@
 				CODE_SIGN_ENTITLEMENTS = Config/Widget.entitlements;
 				INFOPLIST_FILE = "Config/Widget-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "sstincky calander";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.3;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

@@ -15,6 +15,8 @@ export const upsert = mutation({
     clientId: v.string(), title: v.string(), start: v.number(), end: v.number(),
     isAllDay: v.boolean(), location: v.string(), notes: v.string(), color: v.string(),
     reminderMinutes: v.optional(v.number()),
+    people: v.optional(v.array(v.string())), tags: v.optional(v.array(v.string())),
+    hostName: v.optional(v.string()),
     expectedUpdatedAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
