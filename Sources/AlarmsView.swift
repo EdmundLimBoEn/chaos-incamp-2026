@@ -1,5 +1,6 @@
 import AlarmKit
 import SwiftUI
+import UIKit
 
 @available(iOS 26.0, *)
 private struct CalendarAlarmMetadata: AlarmMetadata {
@@ -37,6 +38,7 @@ private struct AlarmKitView: View {
     @State private var alarms: [Alarm] = []
     @State private var error: String?
     @State private var scheduling = false
+    @State private var failureStage = "Read alarms"
     @AppStorage("alarmTitles") private var savedTitles = Data()
 
     private var titles: [String: String] {
@@ -84,6 +86,11 @@ private struct AlarmKitView: View {
                     }
                 }
                 Section {
+                    Button("Open alarm permissions in Settings") {
+                        if let url = URL(string: UIApplication.openSettingsURLString) {
+                            UIApplication.shared.open(url)
+                        }
+                    }
                     Text("Alarms use Apple AlarmKit. Permission is requested when you set your first alarm.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
@@ -107,7 +114,11 @@ private struct AlarmKitView: View {
         scheduling = true
         defer { scheduling = false }
         do {
-            let authorization = try await AlarmManager.shared.requestAuthorization()
+            failureStage = "Request alarm permission"
+            let manager = AlarmManager.shared
+            let authorization = manager.authorizationState == .notDetermined
+                ? try await manager.requestAuthorization()
+                : manager.authorizationState
             guard authorization == .authorized else {
                 error = "Allow alarms for this app in Settings to schedule an alarm."
                 return
@@ -121,19 +132,24 @@ private struct AlarmKitView: View {
             let attributes = AlarmAttributes(presentation: presentation, metadata: CalendarAlarmMetadata(title: label), tintColor: .red)
             let id = UUID()
             let configuration = AlarmManager.AlarmConfiguration<CalendarAlarmMetadata>.alarm(schedule: .fixed(date), attributes: attributes)
+            failureStage = "Schedule alarm"
             _ = try await AlarmManager.shared.schedule(id: id, configuration: configuration)
             var updated = titles
             updated[id.uuidString] = label
             savedTitles = (try? JSONEncoder().encode(updated)) ?? savedTitles
             refresh()
         } catch {
-            self.error = error.localizedDescription
+            self.error = describe(error, operation: failureStage)
         }
     }
 
     private func refresh() {
+        guard AlarmManager.shared.authorizationState == .authorized else {
+            alarms = []
+            return
+        }
         do { alarms = try AlarmManager.shared.alarms }
-        catch { self.error = error.localizedDescription }
+        catch { self.error = describe(error, operation: "Read alarms") }
     }
 
     private func cancel(_ alarm: Alarm) {
@@ -143,7 +159,15 @@ private struct AlarmKitView: View {
             updated.removeValue(forKey: alarm.id.uuidString)
             savedTitles = (try? JSONEncoder().encode(updated)) ?? savedTitles
             refresh()
-        } catch { self.error = error.localizedDescription }
+        } catch { self.error = describe(error, operation: "Cancel alarm") }
+    }
+
+    private func describe(_ error: Error, operation: String) -> String {
+        if let alarmError = error as? AlarmManager.AlarmError, alarmError == .maximumLimitReached {
+            return "The system alarm limit has been reached. Cancel an existing alarm before adding another."
+        }
+        let detail = error as NSError
+        return "\(operation) failed. \(detail.localizedDescription)\n\(detail.domain) (\(detail.code))\nPermission: \(String(describing: AlarmManager.shared.authorizationState))"
     }
 
     private func scheduleLabel(_ alarm: Alarm) -> String {
