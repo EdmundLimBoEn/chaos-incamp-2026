@@ -47,15 +47,15 @@ struct CalendarSystemsView: View {
                         Text("None").tag("none")
                         ForEach(CalendarSystems.all) { system in
                             Text(system.name).tag(system.id)
-                        }
+                        }.listRowBackground(LaunchAppearance.palette.surface)
                     }
                     Text("Events keep their original dates and times. This adds a second date label.")
                         .font(.footnote).foregroundStyle(LaunchAppearance.palette.secondary)
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section("Compare dates") {
                     DatePicker("Date", selection: $date, displayedComponents: .date)
                     Button("Today") { date = Date() }
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section {
                     ForEach(CalendarSystems.all) { system in
                         VStack(alignment: .leading, spacing: 5) {
@@ -67,11 +67,12 @@ struct CalendarSystemsView: View {
                             Text(CalendarSystems.label(for: date, system: system.id) ?? "")
                                 .font(.subheadline)
                         }.padding(.vertical, 3)
-                    }
+                    }.listRowBackground(LaunchAppearance.palette.surface)
                 } footer: {
                     Text("Dates use Apple’s calendar calculations and your device time zone. Religious observances may differ by local practice.")
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
             }
+            .calendarTheme()
             .navigationTitle("Calendar systems")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }

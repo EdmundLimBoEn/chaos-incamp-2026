@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct EventEditor: View {
+    @AppStorage("paletteRevision") private var paletteRevision = 0
+    @AppStorage("appearanceTheme") private var activeTheme = "dark"
     let store: EventStore
     let event: CalendarEvent?
     @Environment(\.dismiss) private var dismiss
@@ -52,7 +54,7 @@ struct EventEditor: View {
                     TextField("Event title", text: $title)
                         .font(.title3.weight(.semibold))
                     TextField("Location", text: $location)
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section("When") {
                     Toggle("All day", isOn: $isAllDay)
                     DatePicker("Starts", selection: $start, displayedComponents: isAllDay ? [.date] : [.date, .hourAndMinute])
@@ -61,7 +63,7 @@ struct EventEditor: View {
                         Text("Choose an end after the start.")
                             .font(.caption).foregroundStyle(LaunchAppearance.palette.danger)
                     }
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section("Repeat") {
                     Picker("Repeats", selection: $recurrence) {
                         Text("Never").tag("none")
@@ -74,7 +76,7 @@ struct EventEditor: View {
                         if repeatEnds { DatePicker("Last day", selection: $recurrenceUntil, in: Calendar.current.startOfDay(for: start)..., displayedComponents: .date) }
                         Text("Changes and deletion apply to the entire series.").font(.caption).foregroundStyle(.secondary)
                     }
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section("Reminder") {
                     Picker("Notify me", selection: $reminderMinutes) {
                         Text("None").tag(-1)
@@ -87,7 +89,7 @@ struct EventEditor: View {
                     }
                     Text("Local notifications work offline. Delivery follows your notification and Focus settings.")
                         .font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section("Color") {
                     HStack(spacing: 20) {
                         ForEach(EventColor.allCases) { option in
@@ -105,30 +107,31 @@ struct EventEditor: View {
                             .buttonStyle(.plain)
                             .accessibilityLabel(option.rawValue.capitalized)
                             .accessibilityAddTraits(color == option ? .isSelected : [])
-                        }
+                        }.listRowBackground(LaunchAppearance.palette.surface)
                     }
                     .padding(.vertical, 4)
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section("People & tags") {
                     TextField("People, separated by commas", text: $people)
                     TextField("Host name", text: $hostName)
                     TextField("Tags, separated by commas", text: $tags)
                         .textInputAutocapitalization(.never)
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section("Notes") {
                     TextField("Add notes", text: $notes, axis: .vertical)
                         .lineLimit(4...8)
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section {
                     Label("Saved on this iPhone. Works offline.", systemImage: "internaldrive")
                         .font(.footnote).foregroundStyle(LaunchAppearance.palette.secondary)
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 if event != nil {
                     Section {
                         Button("Delete event", role: .destructive) { confirmingDelete = true }
-                    }
+                    }.listRowBackground(LaunchAppearance.palette.surface)
                 }
             }
+            .calendarTheme()
             .navigationTitle(event == nil ? "New event" : "Edit event")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

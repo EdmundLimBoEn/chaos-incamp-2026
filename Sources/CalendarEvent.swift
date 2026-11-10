@@ -10,6 +10,11 @@ enum EventColor: String, Codable, CaseIterable, Identifiable {
            let rgb = UserDefaults.standard.array(forKey: "launchPalette." + rawValue) as? [Double], rgb.count == 3 {
             return Color(red: rgb[0], green: rgb[1], blue: rgb[2])
         }
+        if UserDefaults.standard.string(forKey: "appearanceTheme") == "saved",
+           let saved = UserDefaults.standard.dictionary(forKey: "savedThemePalette"),
+           let rgb = saved[rawValue] as? [Double], rgb.count == 3 {
+            return Color(red: rgb[0], green: rgb[1], blue: rgb[2])
+        }
         return standardTint
     }
     private var standardTint: Color {

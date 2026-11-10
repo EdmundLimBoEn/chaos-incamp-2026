@@ -18,7 +18,8 @@ enum CalendarAppearance {
     }
 
     static func scheme(_ key: String) -> ColorScheme? {
-        switch key {
+        if key == "saved" { return UserDefaults.standard.string(forKey: "savedThemeScheme") == "light" ? .light : .dark }
+        return switch key {
         case "light": .light
         case "system": nil
         default: .dark
@@ -28,6 +29,9 @@ enum CalendarAppearance {
 
 struct AppearanceView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var currentScheme
+    @AppStorage("hasSavedTheme") private var hasSavedTheme = false
+    @State private var themeSaved = false
     @AppStorage("appearanceTheme") private var theme = "dark"
     @AppStorage("accentColor") private var accent = "red"
     @AppStorage("randomnessMode") private var randomness = "normal"
@@ -54,14 +58,22 @@ struct AppearanceView: View {
                     }
                     Text(randomness == "interactive" ? "A fresh random RGB palette after every tap, swipe or screen change." : randomness == "crazy" ? "Every app palette color gets a fresh random RGB value. Expect unexpected combinations." : randomness == "subtle" ? "A different accent color each time you open the app." : "Keep your chosen theme and accent color.")
                         .font(.caption).foregroundStyle(.secondary)
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section("Theme") {
                     Picker("Appearance", selection: $theme) {
                         Text("Dark").tag("dark")
                         Text("Light").tag("light")
                         Text("System").tag("system")
-                    }.pickerStyle(.segmented)
-                }
+                        Text("Lagoon").tag("lagoon")
+                        if hasSavedTheme { Text("Saved theme").tag("saved") }
+                    }
+                    Button("Save current theme", systemImage: "square.and.arrow.down") {
+                        LaunchAppearance.saveCurrentTheme(isLight: currentScheme == .light)
+                        themeSaved = true
+                    }
+                    Text("Keeps the current colors and switches to Normal mode. Saving again replaces your saved theme.")
+                        .font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section("Accent color") {
                     HStack(spacing: 20) {
                         ForEach(accents, id: \.self) { value in
@@ -77,9 +89,9 @@ struct AppearanceView: View {
                             .buttonStyle(.plain)
                             .accessibilityLabel(value.capitalized)
                             .accessibilityAddTraits(value == accent ? .isSelected : [])
-                        }
+                        }.listRowBackground(LaunchAppearance.palette.surface)
                     }.padding(.vertical, 6)
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section("Launch effects") {
                     Toggle("Confetti on open", isOn: $launchConfetti)
                     VStack(alignment: .leading, spacing: 8) {
@@ -103,12 +115,12 @@ struct AppearanceView: View {
                     Text("Chimes use media volume and play even in silent mode.")
                         .font(.caption).foregroundStyle(.secondary)
                     if let soundError { Text(soundError).font(.caption).foregroundStyle(.red) }
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section("Calendar") {
                     Toggle("Compact month view", isOn: $compact)
                     Text("Show shorter day cells to fit more of the month on screen.")
                         .font(.caption).foregroundStyle(.secondary)
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section("Preview") {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
@@ -130,8 +142,9 @@ struct AppearanceView: View {
                         .background(CalendarAppearance.accent(accent).opacity(0.15), in: RoundedRectangle(cornerRadius: 10))
                         .frame(height: compact ? 58 : 76)
                     }.padding(.vertical, 8)
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
             }
+            .calendarTheme()
             .navigationTitle("Appearance")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -140,6 +153,7 @@ struct AppearanceView: View {
             }
         }
         .onChange(of: randomness) { _, _ in LaunchAppearance.refreshForLaunch() }
+        .alert("Theme saved", isPresented: $themeSaved) { Button("OK", role: .cancel) {} } message: { Text("Your colors are saved. Select Saved theme to return to them anytime.") }
         .overlay {
             if showConfetti { LaunchEffectsView(forceConfetti: true, playSound: false).id(confettiPreview) }
         }

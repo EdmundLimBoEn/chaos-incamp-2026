@@ -24,9 +24,45 @@ enum LaunchAppearance {
     static func color(_ role: String, fallback: Color) -> Color {
         let defaults = UserDefaults.standard
         let mode = defaults.string(forKey: "randomnessMode") ?? "normal"
+        if defaults.string(forKey: "appearanceTheme") == "saved" && mode != "crazy" && mode != "interactive" && !(mode == "subtle" && role == "accent"),
+           let saved = defaults.dictionary(forKey: "savedThemePalette"), let rgb = saved[role] as? [Double], rgb.count == 3 {
+            return Color(red: rgb[0], green: rgb[1], blue: rgb[2])
+        }
+        if defaults.string(forKey: "appearanceTheme") == "lagoon" && mode != "crazy" && mode != "interactive" && !(mode == "subtle" && role == "accent") {
+            switch role {
+            case "background": return Color(red: 0.259, green: 0.435, blue: 0.455)
+            case "surface": return Color(red: 0.20, green: 0.37, blue: 0.39)
+            case "foreground": return Color(red: 0.89, green: 0.94, blue: 0.95)
+            case "secondary": return Color(red: 0.72, green: 0.86, blue: 0.86)
+            case "accent": return Color(red: 0.16, green: 0.79, blue: 0.62)
+            default: break
+            }
+        }
         guard mode == "crazy" || mode == "interactive" || (mode == "subtle" && role == "accent"),
               let components = defaults.array(forKey: "launchPalette." + role) as? [Double], components.count == 3 else { return fallback }
         return Color(red: components[0], green: components[1], blue: components[2])
+    }
+
+    static func saveCurrentTheme(isLight: Bool = false) {
+        let defaults = UserDefaults.standard
+        let current = palette
+        let fallbacks: [String: Color] = ["background": current.background, "foreground": current.foreground, "accent": current.accent, "secondary": current.secondary, "surface": current.surface, "danger": current.danger, "teal": .teal, "blue": .blue, "orange": .orange, "purple": .purple, "pink": .pink, "confetti1": .red, "confetti2": .blue, "confetti3": .orange, "confetti4": .purple]
+        let style: UIUserInterfaceStyle = isLight ? .light : .dark
+        let traits = UITraitCollection(userInterfaceStyle: style)
+        var saved: [String: [Double]] = [:]
+        for role in roles {
+            let uiColor = UIColor(color(role, fallback: fallbacks[role] ?? .white)).resolvedColor(with: traits)
+            var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+            if uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha) {
+                saved[role] = [Double(red), Double(green), Double(blue)]
+            }
+        }
+        defaults.set(saved, forKey: "savedThemePalette")
+        defaults.set(true, forKey: "hasSavedTheme")
+        defaults.set(style == .light ? "light" : "dark", forKey: "savedThemeScheme")
+        defaults.set("normal", forKey: "randomnessMode")
+        defaults.set("saved", forKey: "appearanceTheme")
+        defaults.set(defaults.integer(forKey: "paletteRevision") + 1, forKey: "paletteRevision")
     }
 
     static var palette: LaunchPalette {
@@ -86,4 +122,26 @@ final class ThemeInteractionSensor: UIView, UIGestureRecognizerDelegate {
     }
 
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool { true }
+}
+
+
+private struct CalendarThemeModifier: ViewModifier {
+    @AppStorage("paletteRevision") private var revision = 0
+    @AppStorage("appearanceTheme") private var theme = "dark"
+    @AppStorage("accentColor") private var accent = "red"
+    @AppStorage("randomnessMode") private var randomness = "normal"
+    func body(content: Content) -> some View {
+        content
+            .scrollContentBackground(.hidden)
+            .background(LaunchAppearance.palette.background)
+            .foregroundStyle(LaunchAppearance.palette.foreground)
+            .tint(LaunchAppearance.palette.accent)
+            .toolbarBackground(LaunchAppearance.palette.background, for: .navigationBar, .tabBar)
+            .toolbarBackground(.visible, for: .navigationBar, .tabBar)
+            .preferredColorScheme(CalendarAppearance.scheme(theme))
+    }
+}
+
+extension View {
+    func calendarTheme() -> some View { modifier(CalendarThemeModifier()) }
 }

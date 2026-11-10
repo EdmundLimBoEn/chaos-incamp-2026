@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct EventSearchView: View {
+    @AppStorage("paletteRevision") private var paletteRevision = 0
+    @AppStorage("appearanceTheme") private var activeTheme = "dark"
     let store: EventStore
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
@@ -56,7 +58,7 @@ struct EventSearchView: View {
                         if interpreting { ProgressView("Understanding your request…").font(.caption) }
                         else if !intelligenceStatus.isEmpty { Text(intelligenceStatus).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary) }
                     }
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section("Filters") {
                     Picker("When", selection: $dateFilter) {
                         Text("Any date").tag("any")
@@ -65,12 +67,12 @@ struct EventSearchView: View {
                     }
                     Picker("Color", selection: $colorFilter) {
                         Text("Any color").tag("any")
-                        ForEach(EventColor.allCases) { Text($0.rawValue.capitalized).tag($0.rawValue) }
+                        ForEach(EventColor.allCases) { Text($0.rawValue.capitalized).tag($0.rawValue) }.listRowBackground(LaunchAppearance.palette.surface)
                     }
                     if !tags.isEmpty {
                         Picker("Tag", selection: $tagFilter) {
                             Text("Any tag").tag("any")
-                            ForEach(tags, id: \.self) { Text("#" + $0).tag($0) }
+                            ForEach(tags, id: \.self) { Text("#" + $0).tag($0) }.listRowBackground(LaunchAppearance.palette.surface)
                         }
                     }
                     Toggle("With reminders", isOn: $remindersOnly)
@@ -79,7 +81,7 @@ struct EventSearchView: View {
                         dateFilter = "any"; colorFilter = "any"; tagFilter = "any"
                         remindersOnly = false; conflictsOnly = false
                     }
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section("\(results.count) matching events") {
                     if results.isEmpty {
                         ContentUnavailableView("No matching events", systemImage: "magnifyingglass", description: Text("Try fewer words or reset the filters."))
@@ -97,8 +99,8 @@ struct EventSearchView: View {
                                 }
                             }
                         }
-                    }
-                }
+                    }.listRowBackground(LaunchAppearance.palette.surface)
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 if !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     Section(results.isEmpty ? "Create what you’re looking for" : "Add something new") {
                         Button {
@@ -110,9 +112,10 @@ struct EventSearchView: View {
                             Text("With " + (parsed.draft().people ?? []).joined(separator: ", ")).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                         }
                         Text("Review the suggested title, date and time before saving.").font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
-                    }
+                    }.listRowBackground(LaunchAppearance.palette.surface)
                 }
             }
+            .calendarTheme()
             .navigationTitle("Search & filter")
             .searchable(text: $query, prompt: "Events, people, dates, times, tags")
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }

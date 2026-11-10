@@ -17,27 +17,31 @@ struct LaunchEffectsView: View {
 
     var body: some View {
         GeometryReader { geometry in
+            let emitters = amount >= 600 ? 5 : amount >= 250 ? 3 : 1
+            ForEach(0..<emitters, id: \.self) { emitter in
             Color.clear
                 .frame(width: 1, height: 1)
                 .confettiCannon(
                     trigger: $trigger,
-                    num: amount,
+                    num: amount / emitters + (emitter < amount % emitters ? 1 : 0),
                     colors: [
                         LaunchAppearance.color("confetti1", fallback: .red),
                         LaunchAppearance.color("confetti2", fallback: .blue),
                         LaunchAppearance.color("confetti3", fallback: .orange),
                         LaunchAppearance.color("confetti4", fallback: .purple)
                     ],
-                    confettiSize: 9,
+                    confettiSize: amount >= 250 ? 7 : 9,
                     rainHeight: geometry.size.height,
-                    openingAngle: .degrees(45),
-                    closingAngle: .degrees(135),
-                    radius: min(geometry.size.width, 350),
+                    openingAngle: .degrees(amount >= 250 ? 10 : 45),
+                    closingAngle: .degrees(amount >= 250 ? 170 : 135),
+                    radius: amount >= 250 ? geometry.size.width * 0.8 : min(geometry.size.width, 350),
                     repetitions: repetitions,
                     repetitionInterval: 0.35,
                     hapticFeedback: false
                 )
-                .position(x: geometry.size.width / 2, y: geometry.size.height * 0.65)
+                .id("\(amount)-\(emitter)")
+                .position(x: geometry.size.width * CGFloat(emitter + 1) / CGFloat(emitters + 1), y: geometry.size.height * (amount >= 250 ? 0.8 : 0.65))
+            }
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)

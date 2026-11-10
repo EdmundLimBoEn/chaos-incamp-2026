@@ -11,6 +11,8 @@ private struct HostReport: Decodable {
 }
 
 struct AccountLoginSection: View {
+    @AppStorage("paletteRevision") private var paletteRevision = 0
+    @AppStorage("appearanceTheme") private var activeTheme = "dark"
     @State private var username = ""
     @State private var password = ""
     @State private var create = false
@@ -33,11 +35,13 @@ struct AccountLoginSection: View {
                 }.disabled(busy || username.isEmpty || password.count < 8)
                 if let error { Text(error).font(.caption).foregroundStyle(LaunchAppearance.palette.danger) }
             }
-        }
+        }.listRowBackground(LaunchAppearance.palette.surface)
     }
 }
 
 struct EventFeedbackView: View {
+    @AppStorage("paletteRevision") private var paletteRevision = 0
+    @AppStorage("appearanceTheme") private var activeTheme = "dark"
     let event: PublicListing
     @Environment(\.dismiss) private var dismiss
     @State private var rating = 5
@@ -52,14 +56,14 @@ struct EventFeedbackView: View {
                     Text(event.title).font(.title2.bold())
                     Text("How was this event?").font(.headline)
                     if let host = event.host { Text("Your feedback goes to " + host.displayName).font(.subheadline).foregroundStyle(.secondary) }
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 AccountLoginSection()
                 Section("Your rating") {
                     HStack {
                         ForEach(1...5, id: \.self) { value in
                             Button { rating = value } label: { Image(systemName: value <= rating ? "star.fill" : "star").font(.title).foregroundStyle(LaunchAppearance.color("orange", fallback: .orange)) }
                                 .buttonStyle(.plain).accessibilityLabel("\(value) stars")
-                        }
+                        }.listRowBackground(LaunchAppearance.palette.surface)
                     }
                     Text("\(rating) out of 5 stars").font(.subheadline.bold())
                     TextField("What should the host know?", text: $message, axis: .vertical).lineLimit(4...8)
@@ -76,9 +80,10 @@ struct EventFeedbackView: View {
                     }.buttonStyle(.borderedProminent)
                         .disabled(busy || ConvexAccount.shared.username == nil || message.count > 3000)
                     if ConvexAccount.shared.username == nil { Text("Sign in above to send your feedback.").font(.caption).foregroundStyle(.secondary) }
-                }
-                if let error { Section { Text(error).foregroundStyle(LaunchAppearance.palette.danger) } }
+                }.listRowBackground(LaunchAppearance.palette.surface)
+                if let error { Section { Text(error).foregroundStyle(LaunchAppearance.palette.danger) }.listRowBackground(LaunchAppearance.palette.surface) }
             }
+            .calendarTheme()
             .navigationTitle("Event feedback")
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(busy) } }
             .interactiveDismissDisabled(busy)
@@ -88,6 +93,8 @@ struct EventFeedbackView: View {
 }
 
 struct HostedEventsView: View {
+    @AppStorage("paletteRevision") private var paletteRevision = 0
+    @AppStorage("appearanceTheme") private var activeTheme = "dark"
     var store: EventStore? = nil
     var isTab = false
     @State private var browse = false
@@ -109,14 +116,14 @@ struct HostedEventsView: View {
                                 .font(.headline).frame(maxWidth: .infinity).padding(.vertical, 6)
                         }.buttonStyle(.borderedProminent)
                     }
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 if ConvexAccount.shared.username == nil {
-                    Section { Text("Sign in below to see feedback on your hosted events.").font(.subheadline) }
+                    Section { Text("Sign in below to see feedback on your hosted events.").font(.subheadline) }.listRowBackground(LaunchAppearance.palette.surface)
                 }
                 AccountLoginSection()
                 Section("Received · events you host") {
                     Text("Tap an event below to read its ratings and messages.").font(.caption).foregroundStyle(.secondary)
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 if loading { ProgressView() }
                 if let error { Text(error).foregroundStyle(LaunchAppearance.palette.danger) }
                 ForEach(events) { event in
@@ -126,9 +133,10 @@ struct HostedEventsView: View {
                             Text(event.published == false ? "Unpublished · View feedback" : "View ratings & feedback").font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                         }
                     }
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 if events.isEmpty && !loading && ConvexAccount.shared.username != nil { Text("No hosted events yet. Publish a public event from Discover to start receiving feedback.").foregroundStyle(LaunchAppearance.palette.secondary) }
             }
+            .calendarTheme()
             .navigationTitle("Feedback")
             .toolbar { if !isTab { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } } }
             .sheet(isPresented: $browse) { if let store { PublicEventsView(store: store) } }
@@ -147,6 +155,8 @@ struct HostedEventsView: View {
 }
 
 private struct HostFeedbackView: View {
+    @AppStorage("paletteRevision") private var paletteRevision = 0
+    @AppStorage("appearanceTheme") private var activeTheme = "dark"
     let event: PublicListing
     @Environment(\.dismiss) private var dismiss
     @State private var report: HostReport?
@@ -157,7 +167,7 @@ private struct HostFeedbackView: View {
                 if let report {
                     Section(event.title) {
                         Text("\(report.count) ratings · \(report.averageRating ?? 0, specifier: "%.1f") / 5")
-                    }
+                    }.listRowBackground(LaunchAppearance.palette.surface)
                     ForEach(report.feedback) { feedback in
                         VStack(alignment: .leading, spacing: 8) {
                             Text(String(repeating: "★", count: feedback.rating)).foregroundStyle(LaunchAppearance.color("orange", fallback: .orange))
@@ -165,11 +175,12 @@ private struct HostFeedbackView: View {
                             Text(feedback.message.isEmpty ? "No written feedback" : feedback.message)
                             Text(Date(timeIntervalSince1970: feedback.updatedAt / 1000).formatted()).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                         }
-                    }
+                    }.listRowBackground(LaunchAppearance.palette.surface)
                     if report.feedback.isEmpty { Text("No feedback yet.").foregroundStyle(LaunchAppearance.palette.secondary) }
                 } else if let error { Text(error).foregroundStyle(LaunchAppearance.palette.danger) }
                 else { ProgressView() }
             }
+            .calendarTheme()
             .navigationTitle("Ratings & feedback")
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
             .task {

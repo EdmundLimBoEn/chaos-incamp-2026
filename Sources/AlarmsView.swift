@@ -23,7 +23,8 @@ struct AlarmsView: View {
                     Text("Event reminders still work on this device.")
                         .foregroundStyle(LaunchAppearance.palette.secondary)
                 }
-                .navigationTitle("Clock")
+                .calendarTheme()
+            .navigationTitle("Clock")
                 .toolbar { Button("Done") { dismiss() } }
             }
         }
@@ -58,7 +59,7 @@ private struct AlarmKitView: View {
                                 .font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                         }.frame(maxWidth: .infinity).padding(.vertical, 20)
                     }
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section("New alarm") {
                     TextField("Label", text: $title)
                     DatePicker("Ring at", selection: $date, in: Date()..., displayedComponents: [.date, .hourAndMinute])
@@ -67,7 +68,7 @@ private struct AlarmKitView: View {
                     } label: {
                         Label(scheduling ? "Scheduling…" : "Set alarm", systemImage: "alarm.fill")
                     }.disabled(scheduling || title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section("Your alarms") {
                     if alarms.isEmpty {
                         Text("No alarms set").foregroundStyle(LaunchAppearance.palette.secondary)
@@ -83,8 +84,8 @@ private struct AlarmKitView: View {
                                 Image(systemName: "trash")
                             }.accessibilityLabel("Cancel alarm")
                         }
-                    }
-                }
+                    }.listRowBackground(LaunchAppearance.palette.surface)
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section {
                     Button("Open alarm permissions in Settings") {
                         if let url = URL(string: UIApplication.openSettingsURLString) {
@@ -93,8 +94,9 @@ private struct AlarmKitView: View {
                     }
                     Text("Alarms use Apple AlarmKit. Permission is requested when you set your first alarm.")
                         .font(.footnote).foregroundStyle(LaunchAppearance.palette.secondary)
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
             }
+            .calendarTheme()
             .navigationTitle("Clock & alarms")
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
             .task {

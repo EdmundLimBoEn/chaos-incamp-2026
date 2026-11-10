@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct PublicEventComposer: View {
+    @AppStorage("paletteRevision") private var paletteRevision = 0
+    @AppStorage("appearanceTheme") private var activeTheme = "dark"
     let store: EventStore
     @Environment(\.dismiss) private var dismiss
     private var account: ConvexAccount { .shared }
@@ -50,7 +52,7 @@ struct PublicEventComposer: View {
                             }
                         }.disabled(busy || username.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || password.count < 8)
                     }
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section("Public event") {
                     TextField("Event title", text: $title)
                     TextField("Description", text: $description, axis: .vertical).lineLimit(3...6)
@@ -59,11 +61,11 @@ struct PublicEventComposer: View {
                     DatePicker("Ends", selection: $end)
                     if end <= start { Text("End must be after the start.").font(.caption).foregroundStyle(LaunchAppearance.palette.danger) }
                     TextField("Tags, separated by commas", text: $tags).textInputAutocapitalization(.never)
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section("Host profile") {
                     TextField("Public host name", text: $host)
                     TextField("About the host", text: $bio, axis: .vertical)
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section {
                     Toggle("Also add to my private calendar", isOn: $localCopy)
                     Text("Publishing makes this event and host profile visible to everyone. Your other calendar events stay private.")
@@ -71,9 +73,10 @@ struct PublicEventComposer: View {
                     Button(busy ? "Please wait…" : "Publish public event", systemImage: "globe") {
                         Task { await publish() }
                     }.disabled(busy || account.username == nil || title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || host.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || end <= start)
-                }
-                if let error { Section { Text(error).foregroundStyle(LaunchAppearance.palette.danger).textSelection(.enabled) } }
+                }.listRowBackground(LaunchAppearance.palette.surface)
+                if let error { Section { Text(error).foregroundStyle(LaunchAppearance.palette.danger).textSelection(.enabled) }.listRowBackground(LaunchAppearance.palette.surface) }
             }
+            .calendarTheme()
             .navigationTitle("Create public event")
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(busy) } }
             .interactiveDismissDisabled(busy)

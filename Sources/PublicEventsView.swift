@@ -11,11 +11,16 @@ struct PublicListing: Decodable, Identifiable {
     let location: String
     let host: PublicHost?
     var published: Bool? = nil
+    var calendarDraft: CalendarEvent {
+        CalendarEvent(title: title, start: Date(timeIntervalSince1970: start / 1000), end: Date(timeIntervalSince1970: end / 1000), location: location, notes: description, tags: tags, hostName: host?.displayName)
+    }
 }
 private struct ListingPage: Decodable { let page: [PublicListing]; let isDone: Bool; let continueCursor: String }
 private struct ConvexResponse: Decodable { let status: String; let value: ListingPage?; let errorMessage: String? }
 
 struct PublicEventsView: View {
+    @AppStorage("paletteRevision") private var paletteRevision = 0
+    @AppStorage("appearanceTheme") private var activeTheme = "dark"
     let store: EventStore
     var isTab = false
     @Environment(\.dismiss) private var dismiss
@@ -30,8 +35,7 @@ struct PublicEventsView: View {
     @State private var done = true
     @State private var loading = false
     @State private var error: String?
-    @State private var draft: CalendarEvent?
-    @State private var editor = false
+    @State private var importEvent: PublicListing?
 
     var body: some View {
         NavigationStack {
@@ -39,17 +43,19 @@ struct PublicEventsView: View {
                 Section {
                     Button("Create public event", systemImage: "plus.circle.fill") { publish = true }
                     Button("Read feedback on my events", systemImage: "star.bubble.fill") { hostDashboard = true }
-                }
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 Section("Find public events") {
                     TextField("Title, host or description", text: $query)
                     TextField("Tag", text: $tag).textInputAutocapitalization(.never)
                     Button(loading ? "Loading…" : "Search public events") { Task { await load(reset: true) } }.disabled(loading)
-                }
-                if let error { Section { Text(error).foregroundStyle(LaunchAppearance.palette.danger) } }
+                }.listRowBackground(LaunchAppearance.palette.surface)
+                if let error { Section { Text(error).foregroundStyle(LaunchAppearance.palette.danger) }.listRowBackground(LaunchAppearance.palette.surface) }
                 ForEach(listings) { listing in
                     Section {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(listing.title).font(.headline)
+                            Button { importEvent = listing } label: {
+                                Text(listing.title).font(.headline).frame(maxWidth: .infinity, alignment: .leading)
+                            }.buttonStyle(.plain)
                             Text(Date(timeIntervalSince1970: listing.start / 1000).formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                             Text(listing.description).font(.subheadline)
                             if let host = listing.host {
@@ -62,17 +68,17 @@ struct PublicEventsView: View {
                                     .font(.headline).frame(maxWidth: .infinity).padding(.vertical, 5)
                             }.buttonStyle(.borderedProminent)
                             Button("Add to my calendar", systemImage: "calendar.badge.plus") {
-                                draft = CalendarEvent(title: listing.title, start: Date(timeIntervalSince1970: listing.start / 1000), end: Date(timeIntervalSince1970: listing.end / 1000), location: listing.location, notes: listing.description, tags: listing.tags, hostName: listing.host?.displayName)
-                                editor = true
+                                importEvent = listing
                             }
                         }.padding(.vertical, 4)
-                    }
-                }
+                    }.listRowBackground(LaunchAppearance.palette.surface)
+                }.listRowBackground(LaunchAppearance.palette.surface)
                 if !done { Button("Load more") { Task { await load(reset: false) } }.disabled(loading) }
                 if listings.isEmpty && !loading && error == nil {
                     Text("No public events yet. Create one to get started.").font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                 }
             }
+            .calendarTheme()
             .navigationTitle("Discover")
             .toolbar { if !isTab { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } } }
             .task { await load(reset: true) }
@@ -80,7 +86,10 @@ struct PublicEventsView: View {
             .sheet(item: $feedbackEvent) { EventFeedbackView(event: $0) }
             .sheet(isPresented: $hostDashboard) { HostedEventsView(store: store) }
             .sheet(isPresented: $publish, onDismiss: { Task { await load(reset: true) } }) { PublicEventComposer(store: store) }
-            .sheet(isPresented: $editor) { EventEditor(store: store, date: Date(), draft: draft) }
+            .sheet(item: $importEvent) { listing in
+                EventEditor(store: store, date: Date(timeIntervalSince1970: listing.start / 1000), draft: listing.calendarDraft)
+                    .id(listing.id)
+            }
         }
     }
 
@@ -121,6 +130,8 @@ struct PublicEventsView: View {
 }
 
 struct PublicDiscoveryPreview: View {
+    @AppStorage("paletteRevision") private var paletteRevision = 0
+    @AppStorage("appearanceTheme") private var activeTheme = "dark"
     let store: EventStore
     @State private var listings: [PublicListing] = []
     @State private var loading = true
@@ -138,10 +149,10 @@ struct PublicDiscoveryPreview: View {
                         if let host = event.host { Text("Hosted by " + host.displayName).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary) }
                     }
                 }
-            }
+            }.listRowBackground(LaunchAppearance.palette.surface)
             if !loading && listings.isEmpty { Text(error ?? "No public events yet. Publish the first one from Discover.").font(.caption).foregroundStyle(LaunchAppearance.palette.secondary) }
             NavigationLink("Browse all public events") { PublicEventsView(store: store) }
-        }
+        }.listRowBackground(LaunchAppearance.palette.surface)
         .task {
             do {
                 var request = URLRequest(url: ConvexAccount.baseURL.appendingPathComponent("api/query"))
