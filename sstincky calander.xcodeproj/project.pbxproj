@@ -7,151 +7,121 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0457985558C7B35EB6B86EA2 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACB3F727CEA653BD6D30986 /* CalendarView.swift */; };
-		0EFC030F98903031281B175B /* EventEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05B55A71F83FBE70C5556AC5 /* EventEditor.swift */; };
-		21DA3D4A00210565579B8532 /* EventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2D600519F7BCD96A09C214E /* EventStore.swift */; };
-		A10BE6D335410FE990DD80BD /* CalendarEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8E55D9143D351E1D4BFD8E /* CalendarEvent.swift */; };
-		AF6DBEB8AEC9F9DFC9B9E5FC /* DaymarkApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99916BBDC1825500C7ED9C9F /* DaymarkApp.swift */; };
+		48B2BF2358DBAD0446BC0236 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F2A01617B1ED0455D97EAC /* CalendarView.swift */; };
+		70870DB284ED2DD22026B054 /* EventEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0AC6E85E1C6C6DB7AC175E9 /* EventEditor.swift */; };
+		794A6664D3A2482C3C3FFD52 /* SstinckyCalanderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C905BCFC5A094358D114A12 /* SstinckyCalanderApp.swift */; };
+		B048B805DD383E68F3E9F2EC /* EventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37FE6E64E26EDA84F529BE78 /* EventStore.swift */; };
+		FB0EA15D3710AF193E7449C6 /* CalendarEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169654C58FAF5BA37E201145 /* CalendarEvent.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		05B55A71F83FBE70C5556AC5 /* EventEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventEditor.swift; sourceTree = "<group>"; };
-		5ACB3F727CEA653BD6D30986 /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
-		5E8E55D9143D351E1D4BFD8E /* CalendarEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarEvent.swift; sourceTree = "<group>"; };
-		939F84132D6B99F5EAAF9E7D /* Daymark.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Daymark.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		99916BBDC1825500C7ED9C9F /* DaymarkApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaymarkApp.swift; sourceTree = "<group>"; };
-		E2D600519F7BCD96A09C214E /* EventStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventStore.swift; sourceTree = "<group>"; };
+		169654C58FAF5BA37E201145 /* CalendarEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarEvent.swift; sourceTree = "<group>"; };
+		37FE6E64E26EDA84F529BE78 /* EventStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventStore.swift; sourceTree = "<group>"; };
+		49F2A01617B1ED0455D97EAC /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
+		6C905BCFC5A094358D114A12 /* SstinckyCalanderApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SstinckyCalanderApp.swift; sourceTree = "<group>"; };
+		7106EA3522F40993F0A8534F /* sstincky calander.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "sstincky calander.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C0AC6E85E1C6C6DB7AC175E9 /* EventEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventEditor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
-		133D82EA84F9F9505D8B46DE /* Products */ = {
+		9B5434C9BF2FAA4D7B2E53EF /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				939F84132D6B99F5EAAF9E7D /* Daymark.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		4A750F3B55A77C28448F8AFC /* Sources */ = {
-			isa = PBXGroup;
-			children = (
-				5E8E55D9143D351E1D4BFD8E /* CalendarEvent.swift */,
-				5ACB3F727CEA653BD6D30986 /* CalendarView.swift */,
-				99916BBDC1825500C7ED9C9F /* DaymarkApp.swift */,
-				05B55A71F83FBE70C5556AC5 /* EventEditor.swift */,
-				E2D600519F7BCD96A09C214E /* EventStore.swift */,
+				169654C58FAF5BA37E201145 /* CalendarEvent.swift */,
+				49F2A01617B1ED0455D97EAC /* CalendarView.swift */,
+				C0AC6E85E1C6C6DB7AC175E9 /* EventEditor.swift */,
+				37FE6E64E26EDA84F529BE78 /* EventStore.swift */,
+				6C905BCFC5A094358D114A12 /* SstinckyCalanderApp.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
 		};
-		8DBEC5D9A119680BCF957024 = {
+		E7C305DE071687A723CC7FD4 = {
 			isa = PBXGroup;
 			children = (
-				4A750F3B55A77C28448F8AFC /* Sources */,
-				133D82EA84F9F9505D8B46DE /* Products */,
+				9B5434C9BF2FAA4D7B2E53EF /* Sources */,
+				F845986340CEB5C53CB6FE9D /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		F845986340CEB5C53CB6FE9D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				7106EA3522F40993F0A8534F /* sstincky calander.app */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		058C680F22549278E91215E3 /* Daymark */ = {
+		BC4D8A5393EB81D0DA9FEBB1 /* sstincky calander */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 077D15CF805DA4F4BD11E014 /* Build configuration list for PBXNativeTarget "Daymark" */;
+			buildConfigurationList = 9D4672B7E65D4197C98842F2 /* Build configuration list for PBXNativeTarget "sstincky calander" */;
 			buildPhases = (
-				79838E7CBFA8CDFC50B3D043 /* Sources */,
+				2F008FDB8CAB53F7F038A916 /* Sources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = Daymark;
+			name = "sstincky calander";
 			packageProductDependencies = (
 			);
-			productName = Daymark;
-			productReference = 939F84132D6B99F5EAAF9E7D /* Daymark.app */;
+			productName = "sstincky calander";
+			productReference = 7106EA3522F40993F0A8534F /* sstincky calander.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		97B3DB9642C7CA5CB2934675 /* Project object */ = {
+		D3FB1AE7A51191CACAA714C8 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
-					058C680F22549278E91215E3 = {
+					BC4D8A5393EB81D0DA9FEBB1 = {
 						ProvisioningStyle = Automatic;
 					};
 				};
 			};
-			buildConfigurationList = A148D6F49243B2A3B1297DA4 /* Build configuration list for PBXProject "Daymark" */;
+			buildConfigurationList = 946CDDB2B9938B1094D394AE /* Build configuration list for PBXProject "sstincky calander" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				Base,
 				en,
 			);
-			mainGroup = 8DBEC5D9A119680BCF957024;
+			mainGroup = E7C305DE071687A723CC7FD4;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 133D82EA84F9F9505D8B46DE /* Products */;
+			productRefGroup = F845986340CEB5C53CB6FE9D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				058C680F22549278E91215E3 /* Daymark */,
+				BC4D8A5393EB81D0DA9FEBB1 /* sstincky calander */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
-		79838E7CBFA8CDFC50B3D043 /* Sources */ = {
+		2F008FDB8CAB53F7F038A916 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A10BE6D335410FE990DD80BD /* CalendarEvent.swift in Sources */,
-				0457985558C7B35EB6B86EA2 /* CalendarView.swift in Sources */,
-				AF6DBEB8AEC9F9DFC9B9E5FC /* DaymarkApp.swift in Sources */,
-				0EFC030F98903031281B175B /* EventEditor.swift in Sources */,
-				21DA3D4A00210565579B8532 /* EventStore.swift in Sources */,
+				FB0EA15D3710AF193E7449C6 /* CalendarEvent.swift in Sources */,
+				48B2BF2358DBAD0446BC0236 /* CalendarView.swift in Sources */,
+				70870DB284ED2DD22026B054 /* EventEditor.swift in Sources */,
+				B048B805DD383E68F3E9F2EC /* EventStore.swift in Sources */,
+				794A6664D3A2482C3C3FFD52 /* SstinckyCalanderApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		57AB6BC8F8E6C23460E53824 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = systems.edmundlim.daymark;
-				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		81ECDFC9A6301E0C9DC64CA5 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = systems.edmundlim.daymark;
-				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		F30EDBD0C423701EFEB0398F /* Release */ = {
+		121ED0EADA012863A629BC6A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -198,7 +168,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Daymark;
+				INFOPLIST_KEY_CFBundleDisplayName = "sstincky calander";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.3;
@@ -213,7 +183,22 @@
 			};
 			name = Release;
 		};
-		FD74B8868D2E810BAB8207E2 /* Debug */ = {
+		467A0245306DEA521DFBA25A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = systems.edmundlim.daymark;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		4A1014C18911BAB96BA9AD79 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -266,7 +251,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Daymark;
+				INFOPLIST_KEY_CFBundleDisplayName = "sstincky calander";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.3;
@@ -282,28 +267,43 @@
 			};
 			name = Debug;
 		};
+		4C937EB50AE5FF41668670E0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = systems.edmundlim.daymark;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		077D15CF805DA4F4BD11E014 /* Build configuration list for PBXNativeTarget "Daymark" */ = {
+		946CDDB2B9938B1094D394AE /* Build configuration list for PBXProject "sstincky calander" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				57AB6BC8F8E6C23460E53824 /* Debug */,
-				81ECDFC9A6301E0C9DC64CA5 /* Release */,
+				4A1014C18911BAB96BA9AD79 /* Debug */,
+				121ED0EADA012863A629BC6A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		A148D6F49243B2A3B1297DA4 /* Build configuration list for PBXProject "Daymark" */ = {
+		9D4672B7E65D4197C98842F2 /* Build configuration list for PBXNativeTarget "sstincky calander" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				FD74B8868D2E810BAB8207E2 /* Debug */,
-				F30EDBD0C423701EFEB0398F /* Release */,
+				467A0245306DEA521DFBA25A /* Debug */,
+				4C937EB50AE5FF41668670E0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 97B3DB9642C7CA5CB2934675 /* Project object */;
+	rootObject = D3FB1AE7A51191CACAA714C8 /* Project object */;
 }

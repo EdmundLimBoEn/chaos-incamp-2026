@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct DaymarkApp: App {
+struct SstinckyCalanderApp: App {
     @State private var store = EventStore()
     var body: some Scene {
         WindowGroup {

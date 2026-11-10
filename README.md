@@ -1,6 +1,6 @@
-# Daymark
+# sstincky calander
 
-Offline SwiftUI calendar prototype. Open `Daymark.xcodeproj` in Xcode, choose a signing team and an iPhone, then Run.
+Offline SwiftUI calendar prototype. Open `sstincky calander.xcodeproj` in Xcode, choose a signing team and an iPhone, then Run.
 
 Year, month and day views; search; create, edit and delete events. Sample events appear on first launch. Data stays in Application Support as atomic JSON.
 

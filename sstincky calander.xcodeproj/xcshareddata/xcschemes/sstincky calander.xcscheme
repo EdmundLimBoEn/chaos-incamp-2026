@@ -15,10 +15,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "058C680F22549278E91215E3"
-               BuildableName = "Daymark.app"
-               BlueprintName = "Daymark"
-               ReferencedContainer = "container:Daymark.xcodeproj">
+               BlueprintIdentifier = "BC4D8A5393EB81D0DA9FEBB1"
+               BuildableName = "sstincky calander.app"
+               BlueprintName = "sstincky calander"
+               ReferencedContainer = "container:sstincky calander.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -32,10 +32,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "058C680F22549278E91215E3"
-            BuildableName = "Daymark.app"
-            BlueprintName = "Daymark"
-            ReferencedContainer = "container:Daymark.xcodeproj">
+            BlueprintIdentifier = "BC4D8A5393EB81D0DA9FEBB1"
+            BuildableName = "sstincky calander.app"
+            BlueprintName = "sstincky calander"
+            ReferencedContainer = "container:sstincky calander.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
@@ -55,10 +55,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "058C680F22549278E91215E3"
-            BuildableName = "Daymark.app"
-            BlueprintName = "Daymark"
-            ReferencedContainer = "container:Daymark.xcodeproj">
+            BlueprintIdentifier = "BC4D8A5393EB81D0DA9FEBB1"
+            BuildableName = "sstincky calander.app"
+            BlueprintName = "sstincky calander"
+            ReferencedContainer = "container:sstincky calander.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
@@ -74,10 +74,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "058C680F22549278E91215E3"
-            BuildableName = "Daymark.app"
-            BlueprintName = "Daymark"
-            ReferencedContainer = "container:Daymark.xcodeproj">
+            BlueprintIdentifier = "BC4D8A5393EB81D0DA9FEBB1"
+            BuildableName = "sstincky calander.app"
+            BlueprintName = "sstincky calander"
+            ReferencedContainer = "container:sstincky calander.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

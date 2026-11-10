@@ -196,7 +196,7 @@ struct CalendarView: View {
         HStack {
             Button("Today") { selected = Date(); searching = false }.font(.headline)
             Spacer()
-            Text("Daymark").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            Text("sstincky calander").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
             Spacer()
             Button { editing = nil; editor = true } label: { Label("Event", systemImage: "plus") }.font(.headline)
         }.padding(.horizontal, 24).padding(.vertical, 16).background(.ultraThinMaterial, in: Capsule()).padding(.horizontal, 18).padding(.bottom, 8)
