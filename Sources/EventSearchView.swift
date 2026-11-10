@@ -5,6 +5,7 @@ struct EventSearchView: View {
     @AppStorage("appearanceTheme") private var activeTheme = "dark"
     let store: EventStore
     @Environment(\.dismiss) private var dismiss
+    @State private var filtersExpanded = false
     @State private var query = ""
     @State private var dateFilter = "any"
     @State private var colorFilter = "any"
@@ -18,9 +19,11 @@ struct EventSearchView: View {
     @State private var interpretedInput = ""
     @State private var intelligenceStatus = ""
     @State private var interpreting = false
-    @State private var discover = false
     private var parsed: EventSearchQuery {
         interpretedInput == query ? (interpreted ?? EventSearchQuery(raw: query)) : EventSearchQuery(raw: query)
+    }
+    private var filterCount: Int {
+        [dateFilter != "any", colorFilter != "any", tagFilter != "any", remindersOnly, conflictsOnly].filter { $0 }.count
     }
     private var tags: [String] { Array(Set(store.activeEvents.flatMap { $0.tags ?? [] })).sorted() }
 
@@ -49,17 +52,14 @@ struct EventSearchView: View {
         NavigationStack {
             List {
                 if query.isEmpty { PublicDiscoveryPreview(store: store) }
+                if !query.isEmpty && (!parsed.querySummary.isEmpty || interpreting) {
+                    Section {
+                        if interpreting { ProgressView("Understanding…").font(.caption) }
+                        else { Text(parsed.querySummary).font(.subheadline).foregroundStyle(LaunchAppearance.palette.secondary) }
+                    }.listRowBackground(LaunchAppearance.palette.surface)
+                }
                 Section {
-                    Button("Discover public events", systemImage: "globe") { discover = true }
-                    Text("Try “design tomorrow at 3pm”, “@Alex” or “#work”.")
-                        .font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
-                    if !query.isEmpty {
-                        Text(parsed.querySummary).font(.caption).foregroundStyle(.tint)
-                        if interpreting { ProgressView("Understanding your request…").font(.caption) }
-                        else if !intelligenceStatus.isEmpty { Text(intelligenceStatus).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary) }
-                    }
-                }.listRowBackground(LaunchAppearance.palette.surface)
-                Section("Filters") {
+                    DisclosureGroup(filterCount == 0 ? "Filters" : "Filters (\(filterCount))", isExpanded: $filtersExpanded) {
                     Picker("When", selection: $dateFilter) {
                         Text("Any date").tag("any")
                         Text("Today").tag("today")
@@ -81,10 +81,11 @@ struct EventSearchView: View {
                         dateFilter = "any"; colorFilter = "any"; tagFilter = "any"
                         remindersOnly = false; conflictsOnly = false
                     }
+                    }
                 }.listRowBackground(LaunchAppearance.palette.surface)
-                Section("\(results.count) matching events") {
+                Section(query.isEmpty ? "Your events" : "\(results.count) results") {
                     if results.isEmpty {
-                        ContentUnavailableView("No matching events", systemImage: "magnifyingglass", description: Text("Try fewer words or reset the filters."))
+                        Text("No events found.").foregroundStyle(LaunchAppearance.palette.secondary)
                     }
                     ForEach(results) { event in
                         Button { editing = event; draft = nil; showEditor = true } label: {
@@ -102,7 +103,7 @@ struct EventSearchView: View {
                     }.listRowBackground(LaunchAppearance.palette.surface)
                 }.listRowBackground(LaunchAppearance.palette.surface)
                 if !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    Section(results.isEmpty ? "Create what you’re looking for" : "Add something new") {
+                    Section("New event") {
                         Button {
                             editing = nil; draft = parsed.draft(); showEditor = true
                         } label: { Label("Create “\(parsed.draft().title)”", systemImage: "plus.circle.fill") }
@@ -111,15 +112,14 @@ struct EventSearchView: View {
                         if !(parsed.draft().people ?? []).isEmpty {
                             Text("With " + (parsed.draft().people ?? []).joined(separator: ", ")).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                         }
-                        Text("Review the suggested title, date and time before saving.").font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                     }.listRowBackground(LaunchAppearance.palette.surface)
                 }
             }
             .calendarTheme()
-            .navigationTitle("Search & filter")
-            .searchable(text: $query, prompt: "Events, people, dates, times, tags")
+            .navigationTitle("Search")
+            .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $query, prompt: "Events, people or dates")
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
-            .sheet(isPresented: $discover) { PublicEventsView(store: store) }
             .task(id: query) {
                 interpreted = nil
                 interpretedInput = ""

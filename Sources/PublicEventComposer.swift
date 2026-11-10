@@ -25,9 +25,9 @@ struct PublicEventComposer: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Your account") {
+                Section("Account") {
                     if let name = account.username {
-                        Label("Signed in as @" + name, systemImage: "person.crop.circle.fill")
+                        Text("@" + name).foregroundStyle(LaunchAppearance.palette.secondary)
                         Button("Sign out", role: .destructive) { Task { busy = true; await account.signOut(); busy = false } }.disabled(busy)
                     } else {
                         Picker("Account", selection: $createAccount) {
@@ -38,8 +38,10 @@ struct PublicEventComposer: View {
                             .textInputAutocapitalization(.never).autocorrectionDisabled()
                         SecureField("Password (8+ characters)", text: $password)
                             .textContentType(createAccount ? .newPassword : .password)
-                        Text("Usernames: 3–30 lowercase letters, numbers or underscores. Password recovery is not available in this prototype.")
-                            .font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
+                        if createAccount {
+                            Text("3–30 letters, numbers or underscores. No password reset.")
+                                .font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
+                        }
                         Button(createAccount ? "Create account" : "Sign in") {
                             Task {
                                 busy = true; error = nil
@@ -53,36 +55,42 @@ struct PublicEventComposer: View {
                         }.disabled(busy || username.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || password.count < 8)
                     }
                 }.listRowBackground(LaunchAppearance.palette.surface)
-                Section("Public event") {
+                Section {
                     TextField("Event title", text: $title)
-                    TextField("Description", text: $description, axis: .vertical).lineLimit(3...6)
-                    TextField("Location", text: $location)
+                    TextField("Host name", text: $host)
+                }.listRowBackground(LaunchAppearance.palette.surface)
+                Section("When") {
                     DatePicker("Starts", selection: $start)
                     DatePicker("Ends", selection: $end)
                     if end <= start { Text("End must be after the start.").font(.caption).foregroundStyle(LaunchAppearance.palette.danger) }
-                    TextField("Tags, separated by commas", text: $tags).textInputAutocapitalization(.never)
-                }.listRowBackground(LaunchAppearance.palette.surface)
-                Section("Host profile") {
-                    TextField("Public host name", text: $host)
-                    TextField("About the host", text: $bio, axis: .vertical)
                 }.listRowBackground(LaunchAppearance.palette.surface)
                 Section {
-                    Toggle("Also add to my private calendar", isOn: $localCopy)
-                    Text("Publishing makes this event and host profile visible to everyone. Your other calendar events stay private.")
+                    DisclosureGroup("More details") {
+                        TextField("Description", text: $description, axis: .vertical).lineLimit(3...6)
+                        TextField("Location", text: $location)
+                        TextField("Tags, separated by commas", text: $tags).textInputAutocapitalization(.never)
+                        TextField("Host bio", text: $bio, axis: .vertical).lineLimit(2...4)
+                    }
+                }.listRowBackground(LaunchAppearance.palette.surface)
+                Section {
+                    Toggle("Add to my calendar", isOn: $localCopy)
+                    Text("This event will be public.")
                         .font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
-                    Button(busy ? "Please wait…" : "Publish public event", systemImage: "globe") {
+                    Button(busy ? "Publishing…" : "Publish event") {
                         Task { await publish() }
-                    }.disabled(busy || account.username == nil || title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || host.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || end <= start)
+                    }.buttonStyle(.borderedProminent)
+                        .disabled(busy || account.username == nil || title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || host.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || end <= start)
                 }.listRowBackground(LaunchAppearance.palette.surface)
                 if let error { Section { Text(error).foregroundStyle(LaunchAppearance.palette.danger).textSelection(.enabled) }.listRowBackground(LaunchAppearance.palette.surface) }
             }
             .calendarTheme()
-            .navigationTitle("Create public event")
+            .navigationTitle("Public event")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(busy) } }
             .interactiveDismissDisabled(busy)
             .alert("Event published", isPresented: $published) {
                 Button("Done") { dismiss() }
-            } message: { Text("Your event is now available in public discovery.") }
+            } message: { Text("Your event is live in Discover.") }
             .onAppear { if host.isEmpty { host = account.username ?? "" } }
         }
     }

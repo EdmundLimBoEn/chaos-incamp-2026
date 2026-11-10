@@ -52,7 +52,6 @@ struct CalendarView: View {
                 }
             }
             .calendarTheme()
-            .navigationTitle("Calendar")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -82,11 +81,11 @@ struct CalendarView: View {
 
     private var optionsMenu: some View {
         Menu("Calendar options", systemImage: "ellipsis") {
-            Button("Appearance & effects", systemImage: "paintpalette") { appearance = true }
-            Button("Clocks & alarms", systemImage: "alarm") { alarms = true }
-            Button("Calendar systems", systemImage: "moonphase.waning.crescent") { calendarSystems = true }
+            Button("Appearance") { appearance = true }
+            Button("Alarms") { alarms = true }
+            Button("Calendars") { calendarSystems = true }
             Divider()
-            Button("Create public event", systemImage: "globe") { publishEvent = true }
+            Button("Publish event") { publishEvent = true }
         }
     }
 
@@ -170,24 +169,13 @@ struct CalendarView: View {
 
     private var agenda: some View {
         VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 8) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(calendar.isDateInToday(selected) ? "Today’s schedule" : selected.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()))
-                        .font(.title3.bold()).foregroundStyle(palette.foreground)
-                    Text(selectedEvents.isEmpty ? "No events planned" : "\(selectedEvents.count) \(selectedEvents.count == 1 ? "event" : "events") planned")
-                        .font(.subheadline).foregroundStyle(palette.secondary)
-                }
-                Spacer(minLength: 4)
-                Button { mode = .day } label: {
-                    Image(systemName: "clock").font(.body.weight(.medium)).frame(width: 44, height: 44)
-                        .background(palette.surface, in: Circle())
-                }.accessibilityLabel("Open day timeline")
-            }
+            Text(calendar.isDateInToday(selected) ? "Today" : selected.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()))
+                .font(.headline).foregroundStyle(palette.foreground)
             if selectedEvents.isEmpty { emptyAgenda }
             else {
                 LazyVStack(spacing: 10) {
                     ForEach(selectedEvents) { event in
-                        CalendarAgendaRow(event: event, conflict: overlaps(event), date: selected) {
+                        CalendarAgendaRow(event: event, conflict: overlaps(event)) {
                             editor = CalendarEditorSelection(event: event, draft: nil)
                         }
                     }
@@ -197,16 +185,14 @@ struct CalendarView: View {
     }
 
     private var emptyAgenda: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Image(systemName: "calendar.badge.plus").font(.title2).foregroundStyle(accent)
-            Text("Plan something for this day").font(.headline).foregroundStyle(palette.foreground)
-            Text("Events and reminders will appear here.")
-                .font(.subheadline).foregroundStyle(palette.secondary)
-            Button("Add an event", systemImage: "plus") { createEvent() }
+        HStack {
+            Text("No events").font(.subheadline).foregroundStyle(palette.secondary)
+            Spacer()
+            Button("Add event") { createEvent() }
                 .font(.subheadline.weight(.semibold)).buttonStyle(.bordered)
         }
-        .frame(maxWidth: .infinity, alignment: .leading).padding(20)
-        .background(palette.surface, in: RoundedRectangle(cornerRadius: 20))
+        .padding(16)
+        .background(palette.surface, in: RoundedRectangle(cornerRadius: 18))
     }
 
     private var yearView: some View {
@@ -355,7 +341,6 @@ private struct CalendarDateButton: View {
 private struct CalendarAgendaRow: View {
     let event: CalendarEvent
     let conflict: Bool
-    let date: Date
     let action: () -> Void
     private var palette: LaunchPalette { LaunchAppearance.palette }
 
@@ -375,21 +360,19 @@ private struct CalendarAgendaRow: View {
                     Text(event.title).font(.body.weight(.semibold)).foregroundStyle(palette.foreground)
                         .multilineTextAlignment(.leading).lineLimit(2)
                     if !event.location.isEmpty {
-                        Label(event.location, systemImage: "location").font(.caption).foregroundStyle(palette.secondary).lineLimit(1)
+                        Text(event.location).font(.subheadline).foregroundStyle(palette.secondary).lineLimit(1)
                     }
-                    HStack(spacing: 10) {
-                        if event.recurrence != nil { Image(systemName: "repeat").accessibilityLabel("Repeating event") }
-                        if event.reminderMinutes != nil { Image(systemName: "bell").accessibilityLabel("Reminder set") }
-                        if conflict { Label("Overlaps", systemImage: "exclamationmark.circle").foregroundStyle(palette.danger) }
-                    }.font(.caption)
+                    if conflict {
+                        Text("Overlaps").font(.caption).foregroundStyle(palette.danger)
+                    }
                 }.frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "chevron.right").font(.caption2.weight(.semibold))
-                    .foregroundStyle(palette.secondary).padding(.top, 4)
             }
             .fixedSize(horizontal: false, vertical: true)
-            .padding(16).frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14).frame(maxWidth: .infinity, alignment: .leading)
             .background(palette.surface, in: RoundedRectangle(cornerRadius: 18))
             .contentShape(RoundedRectangle(cornerRadius: 18))
-        }.buttonStyle(.plain)
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint("Edit event")
     }
 }

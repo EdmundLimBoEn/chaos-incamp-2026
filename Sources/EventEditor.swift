@@ -20,6 +20,7 @@ struct EventEditor: View {
     @State private var recurrence: String
     @State private var repeatEnds: Bool
     @State private var recurrenceUntil: Date
+    @State private var moreOptions = false
     @State private var confirmingDelete = false
 
     init(store: EventStore, date: Date, event: CalendarEvent? = nil, draft: CalendarEvent? = nil) {
@@ -51,34 +52,30 @@ struct EventEditor: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Event title", text: $title)
-                        .font(.title3.weight(.semibold))
+                    TextField("Title", text: $title).font(.title3.weight(.semibold))
                     TextField("Location", text: $location)
                 }.listRowBackground(LaunchAppearance.palette.surface)
-                Section("When") {
+                Section {
                     Toggle("All day", isOn: $isAllDay)
                     DatePicker("Starts", selection: $start, displayedComponents: isAllDay ? [.date] : [.date, .hourAndMinute])
                     DatePicker("Ends", selection: $end, displayedComponents: isAllDay ? [.date] : [.date, .hourAndMinute])
                     if !isAllDay && end <= start {
-                        Text("Choose an end after the start.")
-                            .font(.caption).foregroundStyle(LaunchAppearance.palette.danger)
+                        Text("End must be after start.").font(.caption).foregroundStyle(LaunchAppearance.palette.danger)
                     }
                 }.listRowBackground(LaunchAppearance.palette.surface)
-                Section("Repeat") {
-                    Picker("Repeats", selection: $recurrence) {
+                Section {
+                    Picker("Repeat", selection: $recurrence) {
                         Text("Never").tag("none")
-                        Text("Every day").tag("daily")
-                        Text("Every week").tag("weekly")
-                        Text("Every month").tag("monthly")
+                        Text("Daily").tag("daily")
+                        Text("Weekly").tag("weekly")
+                        Text("Monthly").tag("monthly")
                     }
                     if recurrence != "none" {
-                        Toggle("End repeat on a date", isOn: $repeatEnds)
+                        Toggle("End on a date", isOn: $repeatEnds)
                         if repeatEnds { DatePicker("Last day", selection: $recurrenceUntil, in: Calendar.current.startOfDay(for: start)..., displayedComponents: .date) }
-                        Text("Changes and deletion apply to the entire series.").font(.caption).foregroundStyle(.secondary)
+                        Text("Edits apply to the whole series.").font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                     }
-                }.listRowBackground(LaunchAppearance.palette.surface)
-                Section("Reminder") {
-                    Picker("Notify me", selection: $reminderMinutes) {
+                    Picker("Alert", selection: $reminderMinutes) {
                         Text("None").tag(-1)
                         Text("At start").tag(0)
                         Text("5 minutes before").tag(5)
@@ -87,48 +84,32 @@ struct EventEditor: View {
                         Text("1 hour before").tag(60)
                         Text("1 day before").tag(1440)
                     }
-                    Text("Local notifications work offline. Delivery follows your notification and Focus settings.")
-                        .font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
-                }.listRowBackground(LaunchAppearance.palette.surface)
-                Section("Color") {
-                    HStack(spacing: 20) {
-                        ForEach(EventColor.allCases) { option in
-                            Button {
-                                color = option
-                            } label: {
-                                Circle().fill(option.tint)
-                                    .frame(width: 32, height: 32)
-                                    .overlay {
-                                        if color == option {
-                                            Image(systemName: "checkmark").font(.caption.bold()).foregroundStyle(.white)
-                                        }
-                                    }
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel(option.rawValue.capitalized)
-                            .accessibilityAddTraits(color == option ? .isSelected : [])
-                        }.listRowBackground(LaunchAppearance.palette.surface)
-                    }
-                    .padding(.vertical, 4)
-                }.listRowBackground(LaunchAppearance.palette.surface)
-                Section("People & tags") {
-                    TextField("People, separated by commas", text: $people)
-                    TextField("Host name", text: $hostName)
-                    TextField("Tags, separated by commas", text: $tags)
-                        .textInputAutocapitalization(.never)
-                }.listRowBackground(LaunchAppearance.palette.surface)
-                Section("Notes") {
-                    TextField("Add notes", text: $notes, axis: .vertical)
-                        .lineLimit(4...8)
                 }.listRowBackground(LaunchAppearance.palette.surface)
                 Section {
-                    Label("Saved on this iPhone. Works offline.", systemImage: "internaldrive")
-                        .font(.footnote).foregroundStyle(LaunchAppearance.palette.secondary)
+                    DisclosureGroup("More options", isExpanded: $moreOptions) {
+                        HStack {
+                            ForEach(EventColor.allCases) { option in
+                                Button { color = option } label: {
+                                    Circle().fill(option.tint).frame(width: 28, height: 28)
+                                        .overlay {
+                                            if color == option { Image(systemName: "checkmark").font(.caption.bold()).foregroundStyle(.white) }
+                                        }
+                                        .frame(maxWidth: .infinity, minHeight: 44)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel(option.rawValue.capitalized)
+                                .accessibilityAddTraits(color == option ? .isSelected : [])
+                            }
+                        }.accessibilityLabel("Event color")
+                        TextField("People, separated by commas", text: $people)
+                        TextField("Host", text: $hostName)
+                        TextField("Tags, separated by commas", text: $tags).textInputAutocapitalization(.never)
+                        TextField("Notes", text: $notes, axis: .vertical).lineLimit(2...6)
+                    }
                 }.listRowBackground(LaunchAppearance.palette.surface)
                 if event != nil {
-                    Section {
-                        Button("Delete event", role: .destructive) { confirmingDelete = true }
-                    }.listRowBackground(LaunchAppearance.palette.surface)
+                    Section { Button("Delete event", role: .destructive) { confirmingDelete = true } }
+                        .listRowBackground(LaunchAppearance.palette.surface)
                 }
             }
             .calendarTheme()

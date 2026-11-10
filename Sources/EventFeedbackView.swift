@@ -20,7 +20,7 @@ struct AccountLoginSection: View {
     @State private var error: String?
     var body: some View {
         Section("Account") {
-            if let name = ConvexAccount.shared.username { Label("Signed in as @" + name, systemImage: "person.crop.circle") }
+            if let name = ConvexAccount.shared.username { Text("@" + name).foregroundStyle(LaunchAppearance.palette.secondary) }
             else {
                 Picker("Account", selection: $create) { Text("Sign in").tag(false); Text("Sign up").tag(true) }.pickerStyle(.segmented)
                 TextField("Username", text: $username).textContentType(.username).textInputAutocapitalization(.never).autocorrectionDisabled()
@@ -53,22 +53,21 @@ struct EventFeedbackView: View {
         NavigationStack {
             Form {
                 Section {
-                    Text(event.title).font(.title2.bold())
-                    Text("How was this event?").font(.headline)
-                    if let host = event.host { Text("Your feedback goes to " + host.displayName).font(.subheadline).foregroundStyle(.secondary) }
+                    Text(event.title).font(.headline)
+                    if let host = event.host { Text(host.displayName).font(.subheadline).foregroundStyle(LaunchAppearance.palette.secondary) }
                 }.listRowBackground(LaunchAppearance.palette.surface)
-                AccountLoginSection()
-                Section("Your rating") {
+                if ConvexAccount.shared.username == nil { AccountLoginSection() }
+                Section("Rating") {
                     HStack {
                         ForEach(1...5, id: \.self) { value in
-                            Button { rating = value } label: { Image(systemName: value <= rating ? "star.fill" : "star").font(.title).foregroundStyle(LaunchAppearance.color("orange", fallback: .orange)) }
+                            Button { rating = value } label: { Image(systemName: value <= rating ? "star.fill" : "star").font(.title2).foregroundStyle(LaunchAppearance.color("orange", fallback: .orange)).frame(minWidth: 44, minHeight: 44) }
                                 .buttonStyle(.plain).accessibilityLabel("\(value) stars")
                         }.listRowBackground(LaunchAppearance.palette.surface)
                     }
-                    Text("\(rating) out of 5 stars").font(.subheadline.bold())
-                    TextField("What should the host know?", text: $message, axis: .vertical).lineLimit(4...8)
-                    Text("Your rating and message are shared with the event host. Sending again updates your previous feedback.").font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
-                    Button(busy ? "Sending…" : "Submit feedback") {
+                    Text("\(rating) / 5").font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
+                    TextField("Comment (optional)", text: $message, axis: .vertical).lineLimit(3...6)
+                    Text("Shared with the host.").font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
+                    Button(busy ? "Sending…" : "Send feedback") {
                         Task {
                             busy = true; error = nil
                             defer { busy = false }
@@ -79,15 +78,16 @@ struct EventFeedbackView: View {
                         }
                     }.buttonStyle(.borderedProminent)
                         .disabled(busy || ConvexAccount.shared.username == nil || message.count > 3000)
-                    if ConvexAccount.shared.username == nil { Text("Sign in above to send your feedback.").font(.caption).foregroundStyle(.secondary) }
+                    if ConvexAccount.shared.username == nil { Text("Sign in to send.").font(.caption).foregroundStyle(LaunchAppearance.palette.secondary) }
                 }.listRowBackground(LaunchAppearance.palette.surface)
                 if let error { Section { Text(error).foregroundStyle(LaunchAppearance.palette.danger) }.listRowBackground(LaunchAppearance.palette.surface) }
             }
             .calendarTheme()
-            .navigationTitle("Event feedback")
+            .navigationTitle("Feedback")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(busy) } }
             .interactiveDismissDisabled(busy)
-            .alert("Feedback submitted", isPresented: $submitted) { Button("Done") { dismiss() } } message: { Text("Thanks! The event host can now read your feedback.") }
+            .alert("Feedback submitted", isPresented: $submitted) { Button("Done") { dismiss() } } message: { Text("Sent to the host.") }
         }
     }
 }
@@ -106,38 +106,36 @@ struct HostedEventsView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section {
-                    Label("Event feedback", systemImage: "star.bubble.fill").font(.title2.bold())
-                    Text("Rate an event you attended, or read what people sent about events you host.")
-                        .foregroundStyle(.secondary)
-                    if store != nil {
-                        Button { browse = true } label: {
-                            Label("Leave feedback on an event", systemImage: "square.and.pencil")
-                                .font(.headline).frame(maxWidth: .infinity).padding(.vertical, 6)
-                        }.buttonStyle(.borderedProminent)
-                    }
-                }.listRowBackground(LaunchAppearance.palette.surface)
-                if ConvexAccount.shared.username == nil {
-                    Section { Text("Sign in below to see feedback on your hosted events.").font(.subheadline) }.listRowBackground(LaunchAppearance.palette.surface)
+                if store != nil {
+                    Section {
+                        Button("Leave feedback") { browse = true }
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                            .buttonStyle(.bordered)
+                    }.listRowBackground(LaunchAppearance.palette.surface)
                 }
-                AccountLoginSection()
-                Section("Received · events you host") {
-                    Text("Tap an event below to read its ratings and messages.").font(.caption).foregroundStyle(.secondary)
-                }.listRowBackground(LaunchAppearance.palette.surface)
+                if ConvexAccount.shared.username == nil { AccountLoginSection() }
                 if loading { ProgressView() }
                 if let error { Text(error).foregroundStyle(LaunchAppearance.palette.danger) }
-                ForEach(events) { event in
-                    Button { selected = event } label: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(event.title).font(.headline)
-                            Text(event.published == false ? "Unpublished · View feedback" : "View ratings & feedback").font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
+                if ConvexAccount.shared.username != nil {
+                    Section("Your events") {
+                        ForEach(events) { event in
+                            Button { selected = event } label: {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(event.title).font(.headline)
+                                    Text(event.published == false ? "Unpublished" : Date(timeIntervalSince1970: event.start / 1000).formatted(date: .abbreviated, time: .omitted))
+                                        .font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
+                                }
+                            }
                         }
-                    }
-                }.listRowBackground(LaunchAppearance.palette.surface)
-                if events.isEmpty && !loading && ConvexAccount.shared.username != nil { Text("No hosted events yet. Publish a public event from Discover to start receiving feedback.").foregroundStyle(LaunchAppearance.palette.secondary) }
+                        if events.isEmpty && !loading {
+                            Text("No hosted events yet.").foregroundStyle(LaunchAppearance.palette.secondary)
+                        }
+                    }.listRowBackground(LaunchAppearance.palette.surface)
+                }
             }
             .calendarTheme()
             .navigationTitle("Feedback")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar { if !isTab { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } } }
             .sheet(isPresented: $browse) { if let store { PublicEventsView(store: store) } }
             .task(id: ConvexAccount.shared.username) { await load() }
@@ -172,8 +170,8 @@ private struct HostFeedbackView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text(String(repeating: "★", count: feedback.rating)).foregroundStyle(LaunchAppearance.color("orange", fallback: .orange))
                             Text(feedback.authorName).font(.headline)
-                            Text(feedback.message.isEmpty ? "No written feedback" : feedback.message)
-                            Text(Date(timeIntervalSince1970: feedback.updatedAt / 1000).formatted()).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
+                            if !feedback.message.isEmpty { Text(feedback.message) }
+                            Text(Date(timeIntervalSince1970: feedback.updatedAt / 1000).formatted(date: .abbreviated, time: .omitted)).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                         }
                     }.listRowBackground(LaunchAppearance.palette.surface)
                     if report.feedback.isEmpty { Text("No feedback yet.").foregroundStyle(LaunchAppearance.palette.secondary) }
@@ -181,7 +179,8 @@ private struct HostFeedbackView: View {
                 else { ProgressView() }
             }
             .calendarTheme()
-            .navigationTitle("Ratings & feedback")
+            .navigationTitle("Feedback")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
             .task {
                 do { report = try await ConvexAccount.shared.authenticated(HostReport.self, kind: "query", path: "feedback:forHost", args: ["listingId": event.id]) }

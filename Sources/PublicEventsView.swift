@@ -26,10 +26,11 @@ struct PublicEventsView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage("convexDeploymentURL") private var deploymentURL = "https://majestic-vulture-890.convex.cloud"
     @State private var publish = false
-    @State private var hostDashboard = false
     @State private var feedbackEvent: PublicListing?
     @State private var query = ""
     @State private var tag = ""
+    @State private var availableTags: [String] = []
+    @State private var requestID = UUID()
     @State private var listings: [PublicListing] = []
     @State private var cursor: String?
     @State private var done = true
@@ -40,51 +41,73 @@ struct PublicEventsView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section {
-                    Button("Create public event", systemImage: "plus.circle.fill") { publish = true }
-                    Button("Read feedback on my events", systemImage: "star.bubble.fill") { hostDashboard = true }
-                }.listRowBackground(LaunchAppearance.palette.surface)
-                Section("Find public events") {
-                    TextField("Title, host or description", text: $query)
-                    TextField("Tag", text: $tag).textInputAutocapitalization(.never)
-                    Button(loading ? "Loading…" : "Search public events") { Task { await load(reset: true) } }.disabled(loading)
-                }.listRowBackground(LaunchAppearance.palette.surface)
-                if let error { Section { Text(error).foregroundStyle(LaunchAppearance.palette.danger) }.listRowBackground(LaunchAppearance.palette.surface) }
+                if let error {
+                    Section { Text(error).foregroundStyle(LaunchAppearance.palette.danger) }
+                        .listRowBackground(LaunchAppearance.palette.surface)
+                }
+                if loading && listings.isEmpty { ProgressView().frame(maxWidth: .infinity).listRowBackground(Color.clear) }
                 ForEach(listings) { listing in
                     Section {
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: 10) {
                             Button { importEvent = listing } label: {
-                                Text(listing.title).font(.headline).frame(maxWidth: .infinity, alignment: .leading)
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text(listing.title).font(.headline).foregroundStyle(LaunchAppearance.palette.foreground)
+                                    Text(Date(timeIntervalSince1970: listing.start / 1000).formatted(date: .abbreviated, time: .shortened))
+                                        .font(.subheadline).foregroundStyle(LaunchAppearance.palette.secondary)
+                                    if let host = listing.host {
+                                        Text(host.displayName).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
+                                    }
+                                    if !listing.description.isEmpty {
+                                        Text(listing.description).font(.subheadline).foregroundStyle(LaunchAppearance.palette.foreground).lineLimit(2)
+                                    }
+                                }.frame(maxWidth: .infinity, alignment: .leading)
                             }.buttonStyle(.plain)
-                            Text(Date(timeIntervalSince1970: listing.start / 1000).formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
-                            Text(listing.description).font(.subheadline)
-                            if let host = listing.host {
-                                Label(host.displayName, systemImage: "person.crop.circle").font(.subheadline)
-                                if !host.bio.isEmpty { Text(host.bio).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary) }
+                            if !listing.tags.isEmpty {
+                                Text(listing.tags.prefix(3).map { "#" + $0 }.joined(separator: "  "))
+                                    .font(.caption).foregroundStyle(LaunchAppearance.palette.secondary).lineLimit(1)
                             }
-                            if !listing.tags.isEmpty { Text(listing.tags.map { "#" + $0 }.joined(separator: " ")).font(.caption).foregroundStyle(.tint) }
-                            Button { feedbackEvent = listing } label: {
-                                Label("Leave feedback", systemImage: "star.bubble.fill")
-                                    .font(.headline).frame(maxWidth: .infinity).padding(.vertical, 5)
-                            }.buttonStyle(.borderedProminent)
-                            Button("Add to my calendar", systemImage: "calendar.badge.plus") {
-                                importEvent = listing
-                            }.buttonStyle(.bordered)
-                        }.padding(.vertical, 4)
+                            HStack(spacing: 16) {
+                                Button("Add to calendar") { importEvent = listing }
+                                    .buttonStyle(.bordered).frame(minHeight: 44)
+                                Button("Feedback") { feedbackEvent = listing }
+                                    .buttonStyle(.borderless).frame(minHeight: 44)
+                            }
+                        }.padding(.vertical, 2)
                     }.listRowBackground(LaunchAppearance.palette.surface)
-                }.listRowBackground(LaunchAppearance.palette.surface)
+                }
                 if !done { Button("Load more") { Task { await load(reset: false) } }.disabled(loading) }
                 if listings.isEmpty && !loading && error == nil {
-                    Text("No public events yet. Create one to get started.").font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
+                    ContentUnavailableView(query.isEmpty && tag.isEmpty ? "No events yet" : "No matches", systemImage: "calendar")
+                        .listRowBackground(Color.clear)
                 }
             }
             .calendarTheme()
             .navigationTitle("Discover")
-            .toolbar { if !isTab { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } } }
-            .task { await load(reset: true) }
+            .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search events")
+            .toolbar {
+                if !isTab { ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } } }
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    if !availableTags.isEmpty {
+                        Menu {
+                            Picker("Tag", selection: $tag) {
+                                Text("All tags").tag("")
+                                ForEach(availableTags, id: \.self) { Text($0).tag($0) }
+                            }
+                        } label: {
+                            Image(systemName: tag.isEmpty ? "line.3.horizontal.decrease" : "line.3.horizontal.decrease.circle.fill")
+                        }.accessibilityLabel("Filter by tag")
+                    }
+                    Button("Create event", systemImage: "plus") { publish = true }
+                }
+            }
+            .task(id: query + "|" + tag) {
+                if !query.isEmpty { try? await Task.sleep(for: .milliseconds(350)) }
+                guard !Task.isCancelled else { return }
+                await load(reset: true)
+            }
             .refreshable { await load(reset: true) }
             .sheet(item: $feedbackEvent) { EventFeedbackView(event: $0) }
-            .sheet(isPresented: $hostDashboard) { HostedEventsView(store: store) }
             .sheet(isPresented: $publish, onDismiss: { Task { await load(reset: true) } }) { PublicEventComposer(store: store) }
             .sheet(item: $importEvent) { listing in
                 EventEditor(store: store, date: Date(timeIntervalSince1970: listing.start / 1000), draft: listing.calendarDraft)
@@ -99,9 +122,11 @@ struct PublicEventsView: View {
             error = "Enter your HTTPS Convex deployment URL ending in .convex.cloud."
             return
         }
+        let currentRequest = UUID()
+        requestID = currentRequest
         loading = true
         error = nil
-        defer { loading = false }
+        defer { if requestID == currentRequest { loading = false } }
         if reset { cursor = nil; listings = []; done = true }
         do {
             var args: [String: Any] = ["paginationOpts": ["numItems": 20, "cursor": cursor as Any? ?? NSNull()]]
@@ -112,6 +137,7 @@ struct PublicEventsView: View {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = try JSONSerialization.data(withJSONObject: ["path": "discovery:search", "args": args, "format": "json"])
             let (data, response) = try await URLSession.shared.data(for: request)
+            guard !Task.isCancelled, requestID == currentRequest else { return }
             guard let response = response as? HTTPURLResponse, (200..<300).contains(response.statusCode) else {
                 error = "Couldn’t reach this Convex deployment. Check the URL and connection."
                 return
@@ -125,7 +151,11 @@ struct PublicEventsView: View {
             listings += page.page.filter { !seen.contains($0.id) }
             cursor = page.continueCursor
             done = page.isDone
-        } catch { self.error = "Couldn’t load listings. \(error.localizedDescription)" }
+            availableTags = Array(Set(availableTags + page.page.flatMap(\.tags))).sorted()
+        } catch {
+            guard !Task.isCancelled, requestID == currentRequest else { return }
+            self.error = "Couldn’t load events. Pull down to retry."
+        }
     }
 }
 
@@ -139,25 +169,27 @@ struct PublicDiscoveryPreview: View {
     @State private var loading = true
     @State private var error: String?
     var body: some View {
-        Section("Public events · discover without searching") {
-            if loading { ProgressView("Loading public events…") }
+        Section("Discover") {
+            if loading { ProgressView() }
             ForEach(listings) { event in
                 VStack(alignment: .leading, spacing: 10) {
                     Button { importEvent = event } label: {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(event.title).font(.headline)
                             Text(Date(timeIntervalSince1970: event.start / 1000).formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
-                            if let host = event.host { Text("Hosted by " + host.displayName).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary) }
+                            if let host = event.host { Text(host.displayName).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary) }
                         }.frame(maxWidth: .infinity, alignment: .leading)
                     }.buttonStyle(.plain)
-                    Button("Add to my calendar", systemImage: "calendar.badge.plus") { importEvent = event }
-                        .buttonStyle(.borderedProminent)
-                    Button("Leave feedback", systemImage: "star.bubble") { feedbackEvent = event }
-                        .buttonStyle(.borderless)
+                    HStack(spacing: 16) {
+                        Button("Add to calendar") { importEvent = event }
+                            .buttonStyle(.bordered).frame(minHeight: 44)
+                        Button("Feedback") { feedbackEvent = event }
+                            .buttonStyle(.borderless).frame(minHeight: 44)
+                    }
                 }
             }.listRowBackground(LaunchAppearance.palette.surface)
-            if !loading && listings.isEmpty { Text(error ?? "No public events yet. Publish the first one from Discover.").font(.caption).foregroundStyle(LaunchAppearance.palette.secondary) }
-            NavigationLink("Browse all public events") { PublicEventsView(store: store) }
+            if !loading && listings.isEmpty { Text(error ?? "No events yet.").font(.caption).foregroundStyle(LaunchAppearance.palette.secondary) }
+            NavigationLink("See all events") { PublicEventsView(store: store) }
         }.listRowBackground(LaunchAppearance.palette.surface)
         .sheet(item: $importEvent) { listing in
             EventEditor(store: store, date: Date(timeIntervalSince1970: listing.start / 1000), draft: listing.calendarDraft).id(listing.id)
