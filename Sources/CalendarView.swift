@@ -251,12 +251,24 @@ struct CalendarView: View {
                         }.frame(maxWidth: .infinity, minHeight: 54)
                     }.buttonStyle(.plain)
                         .accessibilityLabel(date.formatted(date: .complete, time: .omitted))
+                        .accessibilityAddTraits(calendar.isDate(date, inSameDayAs: selected) ? .isSelected : [])
                 }
             }.padding(.horizontal, 20)
             DayTimeline(events: selectedEvents, date: selected) { event in
                 editor = CalendarEditorSelection(event: event, draft: nil)
             }
         }
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 20)
+                .onEnded { value in
+                    let horizontal = value.translation.width
+                    let vertical = value.translation.height
+                    guard abs(horizontal) >= 40, abs(horizontal) > abs(vertical) * 1.3 else { return }
+                    if let date = calendar.date(byAdding: .day, value: horizontal > 0 ? -1 : 1, to: selected) {
+                        select(date)
+                    }
+                }
+        )
     }
 
     private var weekDates: [Date] {
