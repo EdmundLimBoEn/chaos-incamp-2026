@@ -3,12 +3,16 @@ import ConfettiSwiftUI
 import SwiftUI
 
 struct LaunchEffectsView: View {
+    var forceConfetti = false
+    var playSound = true
+    @AppStorage("confettiAmount") private var confettiAmount = 100.0
+    @AppStorage("confettiRandomAmount") private var randomAmount = true
     @AppStorage("launchConfetti") private var confettiEnabled = true
     @AppStorage("launchSounds") private var soundsEnabled = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var trigger = 0
     @State private var didCelebrate = false
-    @State private var amount = Int.random(in: 20...100)
+    @State private var amount = 100
     @State private var repetitions = Int.random(in: 1...3)
 
     var body: some View {
@@ -40,10 +44,12 @@ struct LaunchEffectsView: View {
         .task {
             guard !didCelebrate else { return }
             didCelebrate = true
+            let limit = max(20, min(1000, Int(confettiAmount)))
+            amount = randomAmount ? Int.random(in: 20...limit) : limit
             try? await Task.sleep(for: .milliseconds(300))
             guard !Task.isCancelled else { return }
-            if confettiEnabled && !reduceMotion { trigger += 1 }
-            if soundsEnabled { LaunchSound.play() }
+            if (confettiEnabled || forceConfetti) && !reduceMotion { trigger += 1 }
+            if playSound && soundsEnabled { LaunchSound.play() }
         }
     }
 }

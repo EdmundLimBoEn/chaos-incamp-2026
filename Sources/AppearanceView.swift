@@ -32,6 +32,10 @@ struct AppearanceView: View {
     @AppStorage("accentColor") private var accent = "red"
     @AppStorage("randomnessMode") private var randomness = "normal"
     @AppStorage("paletteRevision") private var paletteRevision = 0
+    @AppStorage("confettiAmount") private var confettiAmount = 100.0
+    @AppStorage("confettiRandomAmount") private var randomConfetti = true
+    @State private var confettiPreview = UUID()
+    @State private var showConfetti = false
     @AppStorage("launchConfetti") private var launchConfetti = true
     @State private var soundError: String?
     @AppStorage("launchSounds") private var launchSounds = false
@@ -77,6 +81,22 @@ struct AppearanceView: View {
                 }
                 Section("Launch effects") {
                     Toggle("Confetti on open", isOn: $launchConfetti)
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("Confetti amount").font(.headline)
+                            Spacer()
+                            Text("\(Int(confettiAmount)) / burst").monospacedDigit()
+                        }
+                        Slider(value: $confettiAmount, in: 20...1000, step: 20)
+                            .accessibilityLabel("Confetti particles per burst")
+                            .accessibilityValue("\(Int(confettiAmount))")
+                        HStack { Text("A sprinkle"); Spacer(); Text("Absolute chaos") }.font(.caption).foregroundStyle(.secondary)
+                    }
+                    Toggle("Randomize amount up to this limit", isOn: $randomConfetti)
+                    Button("Test confetti", systemImage: "party.popper.fill") {
+                        confettiPreview = UUID()
+                        showConfetti = true
+                    }
                     Toggle("Random chime on open", isOn: $launchSounds)
                     Button("Test chime", systemImage: "speaker.wave.2.fill") { soundError = LaunchSound.play() }
                     Text("Chimes use media volume and play even in silent mode.")
@@ -119,6 +139,9 @@ struct AppearanceView: View {
             }
         }
         .onChange(of: randomness) { _, _ in LaunchAppearance.refreshForLaunch() }
+        .overlay {
+            if showConfetti { LaunchEffectsView(forceConfetti: true, playSound: false).id(confettiPreview) }
+        }
         .tint(CalendarAppearance.accent(accent))
         .preferredColorScheme(CalendarAppearance.scheme(theme))
     }
