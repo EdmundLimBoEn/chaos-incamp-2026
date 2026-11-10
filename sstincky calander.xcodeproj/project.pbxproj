@@ -32,6 +32,7 @@
 		D61CA6F7D124D349E2EAC398 /* LaunchEffectsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29EDFEBE11E5743E8AD4EF14 /* LaunchEffectsView.swift */; };
 		7C2349C339B294F6C73B70D3 /* IntelligentEventParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE8C16E77AAB9D005FBDF182 /* IntelligentEventParser.swift */; };
 		AC0000000000000000000001 /* ConfettiSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = AC0000000000000000000002 /* ConfettiSwiftUI */; };
+		DAF9DD13132387C0A86F4B96 /* ThemeComposerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2588A2A813F94D112C634DF6 /* ThemeComposerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -82,6 +83,7 @@
 		CA1C10AE02791631FFAC22D9 /* LaunchAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAppearance.swift; sourceTree = "<group>"; };
 		29EDFEBE11E5743E8AD4EF14 /* LaunchEffectsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchEffectsView.swift; sourceTree = "<group>"; };
 		EE8C16E77AAB9D005FBDF182 /* IntelligentEventParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntelligentEventParser.swift; sourceTree = "<group>"; };
+		2588A2A813F94D112C634DF6 /* ThemeComposerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeComposerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -91,6 +93,7 @@
 		9B5434C9BF2FAA4D7B2E53EF /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				2588A2A813F94D112C634DF6 /* ThemeComposerView.swift */,
 				EE8C16E77AAB9D005FBDF182 /* IntelligentEventParser.swift */,
 				29EDFEBE11E5743E8AD4EF14 /* LaunchEffectsView.swift */,
 				CA1C10AE02791631FFAC22D9 /* LaunchAppearance.swift */,
@@ -242,6 +245,7 @@
 				ABE26FCB8FAF1A95C8B88CB4 /* AlarmsView.swift in Sources */,
 				FB0EA15D3710AF193E7449C6 /* CalendarEvent.swift in Sources */,
 				48B2BF2358DBAD0446BC0236 /* CalendarView.swift in Sources */,
+				DAF9DD13132387C0A86F4B96 /* ThemeComposerView.swift in Sources */,
 				7C2349C339B294F6C73B70D3 /* IntelligentEventParser.swift in Sources */,
 				D61CA6F7D124D349E2EAC398 /* LaunchEffectsView.swift in Sources */,
 				33342CE3A564D43200B299A4 /* LaunchAppearance.swift in Sources */,

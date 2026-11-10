@@ -25,5 +25,9 @@
 	</dict>
 	<key>UILaunchScreen</key>
 	<dict/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Use your voice to describe a theme.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Turn your spoken theme description into text on this device.</string>
 </dict>
 </plist>

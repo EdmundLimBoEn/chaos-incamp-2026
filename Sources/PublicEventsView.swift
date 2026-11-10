@@ -42,49 +42,32 @@ struct PublicEventsView: View {
         NavigationStack {
             List {
                 if let error {
-                    Section { Text(error).foregroundStyle(LaunchAppearance.palette.danger) }
-                        .listRowBackground(LaunchAppearance.palette.surface)
+                    Text(error).foregroundStyle(LaunchAppearance.palette.danger).discoveryCard()
                 }
-                if loading && listings.isEmpty { ProgressView().frame(maxWidth: .infinity).listRowBackground(Color.clear) }
+                if loading && listings.isEmpty {
+                    ProgressView().frame(maxWidth: .infinity, minHeight: 44)
+                        .listRowBackground(Color.clear).listRowSeparator(.hidden)
+                }
                 ForEach(listings) { listing in
-                    Section {
-                        VStack(alignment: .leading, spacing: 10) {
-                            Button { importEvent = listing } label: {
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text(listing.title).font(.headline).foregroundStyle(LaunchAppearance.palette.foreground)
-                                    Text(Date(timeIntervalSince1970: listing.start / 1000).formatted(date: .abbreviated, time: .shortened))
-                                        .font(.subheadline).foregroundStyle(LaunchAppearance.palette.secondary)
-                                    if let host = listing.host {
-                                        Text(host.displayName).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
-                                    }
-                                    if !listing.description.isEmpty {
-                                        Text(listing.description).font(.subheadline).foregroundStyle(LaunchAppearance.palette.foreground).lineLimit(2)
-                                    }
-                                }.frame(maxWidth: .infinity, alignment: .leading)
-                            }.buttonStyle(.plain)
-                            if !listing.tags.isEmpty {
-                                Text(listing.tags.prefix(3).map { "#" + $0 }.joined(separator: "  "))
-                                    .font(.caption).foregroundStyle(LaunchAppearance.palette.secondary).lineLimit(1)
-                            }
-                            HStack(spacing: 16) {
-                                Button("Add to calendar") { importEvent = listing }
-                                    .buttonStyle(.bordered).frame(minHeight: 44)
-                                Button("Feedback") { feedbackEvent = listing }
-                                    .buttonStyle(.borderless).frame(minHeight: 44)
-                            }
-                        }.padding(.vertical, 2)
-                    }.listRowBackground(LaunchAppearance.palette.surface)
+                    DiscoveryEventCard(event: listing, add: { importEvent = listing }, feedback: { feedbackEvent = listing })
+                        .discoveryCard()
                 }
-                if !done { Button("Load more") { Task { await load(reset: false) } }.disabled(loading) }
+                if !done {
+                    Button("Load more") { Task { await load(reset: false) } }
+                        .frame(maxWidth: .infinity, minHeight: 44).disabled(loading)
+                        .listRowBackground(Color.clear).listRowSeparator(.hidden)
+                }
                 if listings.isEmpty && !loading && error == nil {
                     ContentUnavailableView(query.isEmpty && tag.isEmpty ? "No events yet" : "No matches", systemImage: "calendar")
-                        .listRowBackground(Color.clear)
+                        .listRowBackground(Color.clear).listRowSeparator(.hidden)
                 }
             }
+            .listStyle(.plain)
+            .contentMargins(.vertical, 0, for: .scrollContent)
             .calendarTheme()
             .navigationTitle("Discover")
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search events")
+            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .automatic), prompt: "Search events")
             .toolbar {
                 if !isTab { ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } } }
                 ToolbarItemGroup(placement: .topBarTrailing) {
@@ -172,22 +155,9 @@ struct PublicDiscoveryPreview: View {
         Section("Discover") {
             if loading { ProgressView() }
             ForEach(listings) { event in
-                VStack(alignment: .leading, spacing: 10) {
-                    Button { importEvent = event } label: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(event.title).font(.headline)
-                            Text(Date(timeIntervalSince1970: event.start / 1000).formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
-                            if let host = event.host { Text(host.displayName).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary) }
-                        }.frame(maxWidth: .infinity, alignment: .leading)
-                    }.buttonStyle(.plain)
-                    HStack(spacing: 16) {
-                        Button("Add to calendar") { importEvent = event }
-                            .buttonStyle(.bordered).frame(minHeight: 44)
-                        Button("Feedback") { feedbackEvent = event }
-                            .buttonStyle(.borderless).frame(minHeight: 44)
-                    }
-                }
-            }.listRowBackground(LaunchAppearance.palette.surface)
+                DiscoveryEventCard(event: event, add: { importEvent = event }, feedback: { feedbackEvent = event })
+                    .discoveryCard()
+            }
             if !loading && listings.isEmpty { Text(error ?? "No events yet.").font(.caption).foregroundStyle(LaunchAppearance.palette.secondary) }
             NavigationLink("See all events") { PublicEventsView(store: store) }
         }.listRowBackground(LaunchAppearance.palette.surface)
@@ -208,5 +178,64 @@ struct PublicDiscoveryPreview: View {
             } catch { self.error = "You’re offline. Your private calendar is still available." }
             loading = false
         }
+    }
+}
+
+private struct DiscoveryEventCard: View {
+    let event: PublicListing
+    let add: () -> Void
+    let feedback: () -> Void
+
+    private var date: String {
+        Date(timeIntervalSince1970: event.start / 1000).formatted(date: .abbreviated, time: .shortened)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Button(action: add) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(event.title).font(.headline).foregroundStyle(LaunchAppearance.palette.foreground)
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 5) {
+                            Text(date)
+                            if let host = event.host { Text("·"); Text(host.displayName).lineLimit(1) }
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(date)
+                            if let host = event.host { Text(host.displayName) }
+                        }
+                    }
+                    .font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
+                    if !event.description.isEmpty {
+                        Text(event.description).font(.subheadline)
+                            .foregroundStyle(LaunchAppearance.palette.secondary).lineLimit(1)
+                    }
+                }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    .contentShape(Rectangle())
+            }.buttonStyle(.plain)
+            HStack(spacing: 8) {
+                Button(action: add) {
+                    Text("Add to calendar").font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .background(LaunchAppearance.palette.accent.opacity(0.14), in: RoundedRectangle(cornerRadius: 10))
+                }.buttonStyle(.plain).foregroundStyle(LaunchAppearance.palette.accent)
+                Button(action: feedback) {
+                    Text("Feedback").font(.subheadline)
+                        .frame(minWidth: 88, minHeight: 44)
+                        .contentShape(Rectangle())
+                }.buttonStyle(.plain).foregroundStyle(LaunchAppearance.palette.accent)
+            }
+        }
+    }
+}
+
+private extension View {
+    func discoveryCard() -> some View {
+        frame(maxWidth: .infinity, alignment: .leading)
+            .padding(12)
+            .background(LaunchAppearance.palette.surface, in: RoundedRectangle(cornerRadius: 14))
+            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
     }
 }

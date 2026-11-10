@@ -1,5 +1,12 @@
 import SwiftUI
 
+private struct SearchEditorSelection: Identifiable {
+    let id = UUID()
+    let event: CalendarEvent?
+    let draft: CalendarEvent?
+    var date: Date { (event ?? draft)?.start ?? Date() }
+}
+
 struct EventSearchView: View {
     @AppStorage("paletteRevision") private var paletteRevision = 0
     @AppStorage("appearanceTheme") private var activeTheme = "dark"
@@ -12,9 +19,7 @@ struct EventSearchView: View {
     @State private var tagFilter = "any"
     @State private var remindersOnly = false
     @State private var conflictsOnly = false
-    @State private var showEditor = false
-    @State private var editing: CalendarEvent?
-    @State private var draft: CalendarEvent?
+    @State private var editor: SearchEditorSelection?
     @State private var interpreted: EventSearchQuery?
     @State private var interpretedInput = ""
     @State private var intelligenceStatus = ""
@@ -88,7 +93,7 @@ struct EventSearchView: View {
                         Text("No events found.").foregroundStyle(LaunchAppearance.palette.secondary)
                     }
                     ForEach(results) { event in
-                        Button { editing = event; draft = nil; showEditor = true } label: {
+                        Button { editor = SearchEditorSelection(event: event, draft: nil) } label: {
                             HStack(alignment: .top, spacing: 10) {
                                 Circle().fill(event.color.tint).frame(width: 8, height: 8).padding(.top, 5)
                                 VStack(alignment: .leading, spacing: 5) {
@@ -103,14 +108,15 @@ struct EventSearchView: View {
                     }.listRowBackground(LaunchAppearance.palette.surface)
                 }.listRowBackground(LaunchAppearance.palette.surface)
                 if !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    let proposed = parsed.draft()
                     Section("New event") {
                         Button {
-                            editing = nil; draft = parsed.draft(); showEditor = true
-                        } label: { Label("Create “\(parsed.draft().title)”", systemImage: "plus.circle.fill") }
-                        Text(parsed.draft().start.formatted(date: .complete, time: .shortened))
+                            editor = SearchEditorSelection(event: nil, draft: proposed)
+                        } label: { Label("Create “\(proposed.title)”", systemImage: "plus.circle.fill") }
+                        Text(proposed.start.formatted(date: .complete, time: .shortened))
                             .font(.subheadline).foregroundStyle(LaunchAppearance.palette.secondary)
-                        if !(parsed.draft().people ?? []).isEmpty {
-                            Text("With " + (parsed.draft().people ?? []).joined(separator: ", ")).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
+                        if !(proposed.people ?? []).isEmpty {
+                            Text("With " + (proposed.people ?? []).joined(separator: ", ")).font(.caption).foregroundStyle(LaunchAppearance.palette.secondary)
                         }
                     }.listRowBackground(LaunchAppearance.palette.surface)
                 }
@@ -135,7 +141,10 @@ struct EventSearchView: View {
                 intelligenceStatus = result.status
                 interpreting = false
             }
-            .sheet(isPresented: $showEditor) { EventEditor(store: store, date: Date(), event: editing, draft: draft) }
+            .sheet(item: $editor) { selection in
+                EventEditor(store: store, date: selection.date, event: selection.event, draft: selection.draft)
+                    .id(selection.id)
+            }
         }
     }
 }

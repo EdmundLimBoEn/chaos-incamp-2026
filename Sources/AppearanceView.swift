@@ -31,7 +31,9 @@ struct AppearanceView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var currentScheme
     @AppStorage("hasSavedTheme") private var hasSavedTheme = false
+    @AppStorage("savedThemeName") private var savedThemeName = "Saved theme"
     @State private var themeSaved = false
+    @State private var composingTheme = false
     @AppStorage("appearanceTheme") private var theme = "dark"
     @AppStorage("accentColor") private var accent = "red"
     @AppStorage("randomnessMode") private var randomness = "normal"
@@ -60,12 +62,13 @@ struct AppearanceView: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }.listRowBackground(LaunchAppearance.palette.surface)
                 Section("Theme") {
+                    Button("Describe a theme", systemImage: "sparkles") { composingTheme = true }
                     Picker("Appearance", selection: $theme) {
                         Text("Dark").tag("dark")
                         Text("Light").tag("light")
                         Text("System").tag("system")
                         Text("Lagoon").tag("lagoon")
-                        if hasSavedTheme { Text("Saved theme").tag("saved") }
+                        if hasSavedTheme { Text(savedThemeName).tag("saved") }
                     }
                     Button("Save current theme", systemImage: "square.and.arrow.down") {
                         LaunchAppearance.saveCurrentTheme(isLight: currentScheme == .light)
@@ -146,12 +149,14 @@ struct AppearanceView: View {
             }
             .calendarTheme()
             .navigationTitle("Appearance")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
                 }
             }
         }
+        .sheet(isPresented: $composingTheme) { ThemeComposerView() }
         .onChange(of: randomness) { _, _ in LaunchAppearance.refreshForLaunch() }
         .alert("Theme saved", isPresented: $themeSaved) { Button("OK", role: .cancel) {} } message: { Text("Your colors are saved. Select Saved theme to return to them anytime.") }
         .overlay {

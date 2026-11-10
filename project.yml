@@ -30,6 +30,8 @@ targets:
       path: Config/App-Info.plist
       properties:
         NSAlarmKitUsageDescription: Schedule alarms you create, even when this app is closed.
+        NSMicrophoneUsageDescription: Use your voice to describe a theme.
+        NSSpeechRecognitionUsageDescription: Turn your spoken theme description into text on this device.
     dependencies:
       - package: ConfettiSwiftUI
       - target: CalendarWidget

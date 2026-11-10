@@ -44,7 +44,6 @@ enum LaunchAppearance {
     }
 
     static func saveCurrentTheme(isLight: Bool = false) {
-        let defaults = UserDefaults.standard
         let current = palette
         let fallbacks: [String: Color] = ["background": current.background, "foreground": current.foreground, "accent": current.accent, "secondary": current.secondary, "surface": current.surface, "danger": current.danger, "teal": .teal, "blue": .blue, "orange": .orange, "purple": .purple, "pink": .pink, "confetti1": .red, "confetti2": .blue, "confetti3": .orange, "confetti4": .purple]
         let style: UIUserInterfaceStyle = isLight ? .light : .dark
@@ -57,9 +56,27 @@ enum LaunchAppearance {
                 saved[role] = [Double(red), Double(green), Double(blue)]
             }
         }
+        applyTheme(name: "Saved theme", colors: saved, isLight: isLight)
+    }
+
+    static func applyTheme(name: String, colors: [String: [Double]], isLight: Bool) {
+        let defaults = UserDefaults.standard
+        var saved: [String: [Double]] = [
+            "danger": [1, 0.23, 0.27], "teal": [0.1, 0.72, 0.68],
+            "blue": [0.2, 0.5, 0.98], "orange": [1, 0.55, 0.12],
+            "purple": [0.65, 0.35, 0.95], "pink": [0.92, 0.32, 0.62]
+        ]
+        for (role, rgb) in colors where roles.contains(role) && rgb.count == 3 && rgb.allSatisfy(\.isFinite) {
+            saved[role] = rgb.map { min(1, max(0, $0)) }
+        }
+        for (index, role) in ["accent", "teal", "orange", "purple"].enumerated() {
+            if saved["confetti\(index + 1)"] == nil { saved["confetti\(index + 1)"] = saved[role] }
+        }
+        let title = String(name.trimmingCharacters(in: .whitespacesAndNewlines).prefix(40))
+        defaults.set(title.isEmpty ? "Saved theme" : title, forKey: "savedThemeName")
         defaults.set(saved, forKey: "savedThemePalette")
         defaults.set(true, forKey: "hasSavedTheme")
-        defaults.set(style == .light ? "light" : "dark", forKey: "savedThemeScheme")
+        defaults.set(isLight ? "light" : "dark", forKey: "savedThemeScheme")
         defaults.set("normal", forKey: "randomnessMode")
         defaults.set("saved", forKey: "appearanceTheme")
         defaults.set(defaults.integer(forKey: "paletteRevision") + 1, forKey: "paletteRevision")

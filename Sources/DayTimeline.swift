@@ -4,7 +4,7 @@ struct DayTimeline: View {
     let events: [CalendarEvent]
     let date: Date
     let edit: (CalendarEvent) -> Void
-    @ScaledMetric(relativeTo: .body) private var hourHeight: CGFloat = 88
+    @ScaledMetric(relativeTo: .body) private var hourHeight: CGFloat = 76
     @ScaledMetric(relativeTo: .caption) private var gutter: CGFloat = 56
 
     var body: some View {
@@ -12,27 +12,31 @@ struct DayTimeline: View {
             ScrollView {
                 VStack(spacing: 16) {
                     if !allDayEvents.isEmpty { allDaySection }
-                    GeometryReader { geometry in
-                        ZStack(alignment: .topLeading) {
-                            hourLines
-                            ForEach(placements) { item in
-                                let width = max(1, (geometry.size.width - gutter) / CGFloat(item.columns))
-                                let height = max(26, CGFloat(item.end - item.start) / 60 * hourHeight - 3)
-                                eventCard(item, height: height)
-                                    .frame(width: max(1, width - 5), height: height)
-                                    .offset(x: gutter + CGFloat(item.column) * width, y: CGFloat(item.start) / 60 * hourHeight)
+                    hourLines
+                        .overlay(alignment: .topLeading) {
+                            GeometryReader { geometry in
+                                ZStack(alignment: .topLeading) {
+                                    ForEach(placements) { item in
+                                        let width = max(1, (geometry.size.width - gutter) / CGFloat(item.columns))
+                                        let height = max(26, CGFloat(item.end - item.start) / 60 * hourHeight - 3)
+                                        eventCard(item, height: height)
+                                            .frame(width: max(1, width - 5), height: height)
+                                            .offset(x: gutter + CGFloat(item.column) * width, y: CGFloat(item.start) / 60 * hourHeight)
+                                    }
+                                    if Calendar.current.isDateInToday(date) { currentTimeLine }
+                                }
                             }
-                            if Calendar.current.isDateInToday(date) { currentTimeLine }
                         }
-                    }
-                    .frame(height: hourHeight * 24)
                     .padding(.top, 8)
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 24)
             }
-            .onAppear { proxy.scrollTo(initialHour, anchor: .top) }
-            .onChange(of: date) { _, _ in proxy.scrollTo(initialHour, anchor: .top) }
+            .task(id: Calendar.current.startOfDay(for: date)) {
+                await Task.yield()
+                guard !Task.isCancelled else { return }
+                proxy.scrollTo(initialHour, anchor: .top)
+            }
         }
     }
 
@@ -66,19 +70,21 @@ struct DayTimeline: View {
     }
 
     private var hourLines: some View {
-        ForEach(0..<24) { hour in
-            HStack(alignment: .top, spacing: 8) {
-                Text(String(format: "%02d:00", hour))
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(LaunchAppearance.palette.secondary)
-                    .frame(width: gutter - 8, alignment: .trailing)
-                    .offset(y: -7)
-                Rectangle()
-                    .fill(LaunchAppearance.palette.foreground.opacity(0.1))
-                    .frame(height: 0.5)
+        VStack(spacing: 0) {
+            ForEach(0..<24) { hour in
+                HStack(alignment: .top, spacing: 8) {
+                    Text(String(format: "%02d:00", hour))
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(LaunchAppearance.palette.secondary)
+                        .frame(width: gutter - 8, alignment: .trailing)
+                        .offset(y: -7)
+                    Rectangle()
+                        .fill(LaunchAppearance.palette.foreground.opacity(0.1))
+                        .frame(height: 0.5)
+                }
+                .frame(height: hourHeight, alignment: .top)
+                .id(hour)
             }
-            .offset(y: CGFloat(hour) * hourHeight)
-            .id(hour)
         }
     }
 

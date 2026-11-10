@@ -1,7 +1,7 @@
 import SwiftUI
 
 private enum CalendarMode: String, CaseIterable {
-    case year = "Year", month = "Month", day = "Day"
+    case week = "Week", month = "Month", day = "Day", year = "Year"
 }
 
 private struct CalendarEditorSelection: Identifiable {
@@ -17,10 +17,9 @@ struct CalendarView: View {
     @AppStorage("compactCalendar") private var compact = false
     @AppStorage("secondaryCalendar") private var secondaryCalendar = "none"
     @Environment(\.horizontalSizeClass) private var sizeClass
-    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selected = Date()
-    @State private var mode = CalendarMode.month
+    @State private var mode = CalendarMode.week
     @State private var appearance = false
     @State private var calendarSystems = false
     @State private var alarms = false
@@ -35,17 +34,9 @@ struct CalendarView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                dateHeader
-                Picker("Calendar view", selection: $mode) {
-                    ForEach(CalendarMode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 20)
-                .padding(.bottom, verticalSizeClass == .compact ? 8 : 12)
-                .frame(maxWidth: 1100)
-                .frame(maxWidth: .infinity)
-
+                controlsRow
                 switch mode {
+                case .week: weekView
                 case .year: yearView
                 case .month: monthView
                 case .day: dayView
@@ -89,52 +80,67 @@ struct CalendarView: View {
         }
     }
 
-    private var dateHeader: some View {
-        HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(mode == .year ? selected.formatted(.dateTime.year()) : selected.formatted(.dateTime.month(.wide)))
-                        .font(.system(.title, design: .rounded, weight: .bold))
-                        .foregroundStyle(palette.foreground)
-                        .lineLimit(1).minimumScaleFactor(0.7)
-                    if mode != .year {
-                        Text(selected.formatted(.dateTime.year()))
-                            .font(.title3).foregroundStyle(palette.secondary)
-                            .lineLimit(1).minimumScaleFactor(0.8)
+    private var controlsRow: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 8) {
+                Text(mode == .year ? selected.formatted(.dateTime.year()) : selected.formatted(.dateTime.month(.abbreviated).year()))
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(palette.foreground)
+                    .lineLimit(1).minimumScaleFactor(0.75)
+                Spacer(minLength: 0)
+                Menu {
+                    Picker("Calendar view", selection: $mode) {
+                        ForEach(CalendarMode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
                     }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(mode.rawValue).font(.subheadline.weight(.medium))
+                        Image(systemName: "chevron.down").font(.caption2.weight(.semibold))
+                    }.frame(minHeight: 44)
                 }
-                if let secondary = CalendarSystems.label(for: selected, system: secondaryCalendar) {
-                    Text(secondary).font(.caption).foregroundStyle(palette.secondary).lineLimit(1)
+                .accessibilityLabel("Calendar view, \(mode.rawValue)")
+                HStack(spacing: 0) {
+                    Button { move(-1) } label: { Image(systemName: "chevron.left").frame(width: 44, height: 44) }
+                        .accessibilityLabel("Previous \(mode.rawValue.lowercased())")
+                    Button { move(1) } label: { Image(systemName: "chevron.right").frame(width: 44, height: 44) }
+                        .accessibilityLabel("Next \(mode.rawValue.lowercased())")
                 }
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(palette.foreground)
             }
-            Spacer(minLength: 0)
-            HStack(spacing: 0) {
-                Button { move(-1) } label: { Image(systemName: "chevron.left").frame(width: 44, height: 44) }
-                    .accessibilityLabel("Previous \(mode.rawValue.lowercased())")
-                Button { move(1) } label: { Image(systemName: "chevron.right").frame(width: 44, height: 44) }
-                    .accessibilityLabel("Next \(mode.rawValue.lowercased())")
+            if let secondary = CalendarSystems.label(for: selected, system: secondaryCalendar) {
+                Text(secondary).font(.caption).foregroundStyle(palette.secondary).lineLimit(1)
             }
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(palette.foreground)
-            .background(palette.surface, in: Capsule())
         }
-        .padding(.horizontal, 20).padding(.top, 8).padding(.bottom, 12)
+        .padding(.horizontal, 16).padding(.bottom, 4)
         .frame(maxWidth: 1100).frame(maxWidth: .infinity)
+    }
+
+    private var weekView: some View {
+        VStack(spacing: 8) {
+            weekStrip
+            ScrollView {
+                agenda
+                    .padding(.horizontal, 16).padding(.bottom, 20)
+                    .frame(maxWidth: 800).frame(maxWidth: .infinity)
+            }.scrollIndicators(.hidden)
+        }
+        .simultaneousGesture(daySwipe)
     }
 
     private var monthView: some View {
         ScrollView {
             ViewThatFits(in: .horizontal) {
-                HStack(alignment: .top, spacing: 24) {
+                HStack(alignment: .top, spacing: 16) {
                     monthCard.frame(minWidth: 340, maxWidth: .infinity)
                     agenda.frame(minWidth: 320, maxWidth: .infinity)
                 }
-                VStack(spacing: 24) {
+                VStack(spacing: 14) {
                     monthCard
                     agenda
                 }
             }
-            .padding(.horizontal, 20).padding(.bottom, 28)
+            .padding(.horizontal, 16).padding(.bottom, 20)
             .frame(maxWidth: 1100)
             .frame(maxWidth: .infinity)
         }
@@ -154,7 +160,7 @@ struct CalendarView: View {
             }
         }
         .padding(.horizontal, 8).padding(.top, 12).padding(.bottom, 10)
-        .background(palette.surface, in: RoundedRectangle(cornerRadius: 24))
+        .background(palette.surface, in: RoundedRectangle(cornerRadius: 16))
     }
 
     private var weekdayLabels: some View {
@@ -168,12 +174,12 @@ struct CalendarView: View {
     }
 
     private var agenda: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 8) {
             Text(calendar.isDateInToday(selected) ? "Today" : selected.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()))
-                .font(.headline).foregroundStyle(palette.foreground)
+                .font(.subheadline.weight(.semibold)).foregroundStyle(palette.foreground)
             if selectedEvents.isEmpty { emptyAgenda }
             else {
-                LazyVStack(spacing: 10) {
+                LazyVStack(spacing: 8) {
                     ForEach(selectedEvents) { event in
                         CalendarAgendaRow(event: event, conflict: overlaps(event)) {
                             editor = CalendarEditorSelection(event: event, draft: nil)
@@ -191,8 +197,8 @@ struct CalendarView: View {
             Button("Add event") { createEvent() }
                 .font(.subheadline.weight(.semibold)).buttonStyle(.bordered)
         }
-        .padding(16)
-        .background(palette.surface, in: RoundedRectangle(cornerRadius: 18))
+        .padding(.horizontal, 12).padding(.vertical, 6)
+        .background(palette.surface, in: RoundedRectangle(cornerRadius: 14))
     }
 
     private var yearView: some View {
@@ -237,38 +243,48 @@ struct CalendarView: View {
     }
 
     private var dayView: some View {
-        VStack(spacing: 14) {
-            HStack(spacing: 0) {
-                ForEach(weekDates, id: \.self) { date in
-                    Button { select(date) } label: {
-                        VStack(spacing: 6) {
-                            Text(date.formatted(.dateTime.weekday(.narrow)))
-                                .font(.caption2.weight(.medium)).foregroundStyle(palette.secondary)
-                            Text(String(calendar.component(.day, from: date)))
-                                .font(.body.weight(.semibold)).frame(width: 36, height: 36)
-                                .foregroundStyle(calendar.isDate(date, inSameDayAs: selected) ? LaunchAppearance.accentForeground : palette.foreground)
-                                .background(calendar.isDate(date, inSameDayAs: selected) ? accent : .clear, in: Circle())
-                        }.frame(maxWidth: .infinity, minHeight: 54)
-                    }.buttonStyle(.plain)
-                        .accessibilityLabel(date.formatted(date: .complete, time: .omitted))
-                        .accessibilityAddTraits(calendar.isDate(date, inSameDayAs: selected) ? .isSelected : [])
-                }
-            }.padding(.horizontal, 20)
+        VStack(spacing: 8) {
+            weekStrip
             DayTimeline(events: selectedEvents, date: selected) { event in
                 editor = CalendarEditorSelection(event: event, draft: nil)
             }
         }
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 20)
-                .onEnded { value in
-                    let horizontal = value.translation.width
-                    let vertical = value.translation.height
-                    guard abs(horizontal) >= 40, abs(horizontal) > abs(vertical) * 1.3 else { return }
-                    if let date = calendar.date(byAdding: .day, value: horizontal > 0 ? -1 : 1, to: selected) {
-                        select(date)
-                    }
+        .simultaneousGesture(daySwipe)
+    }
+
+    private var weekStrip: some View {
+        HStack(spacing: 0) {
+            ForEach(weekDates, id: \.self) { date in
+                Button { select(date) } label: {
+                    VStack(spacing: 4) {
+                        Text(date.formatted(.dateTime.weekday(.narrow)))
+                            .font(.caption2.weight(.medium)).foregroundStyle(palette.secondary)
+                        Text(String(calendar.component(.day, from: date)))
+                            .font(.body.weight(.semibold)).frame(width: 34, height: 34)
+                            .foregroundStyle(calendar.isDate(date, inSameDayAs: selected) ? LaunchAppearance.accentForeground : palette.foreground)
+                            .background(calendar.isDate(date, inSameDayAs: selected) ? accent : .clear, in: Circle())
+                    }.frame(maxWidth: .infinity, minHeight: 54)
+                        .contentShape(Rectangle())
+                }.buttonStyle(.plain)
+                    .accessibilityLabel(date.formatted(date: .complete, time: .omitted))
+                    .accessibilityAddTraits(calendar.isDate(date, inSameDayAs: selected) ? .isSelected : [])
+            }
+        }
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .padding(.horizontal, 16)
+        .frame(maxWidth: 800).frame(maxWidth: .infinity)
+    }
+
+    private var daySwipe: some Gesture {
+        DragGesture(minimumDistance: 20)
+            .onEnded { value in
+                let horizontal = value.translation.width
+                let vertical = value.translation.height
+                guard abs(horizontal) >= 40, abs(horizontal) > abs(vertical) * 1.3 else { return }
+                if let date = calendar.date(byAdding: .day, value: horizontal > 0 ? -1 : 1, to: selected) {
+                    select(date)
                 }
-        )
+            }
     }
 
     private var weekDates: [Date] {
@@ -291,7 +307,13 @@ struct CalendarView: View {
     }
 
     private func move(_ value: Int) {
-        let unit: Calendar.Component = mode == .year ? .year : mode == .month ? .month : .day
+        let unit: Calendar.Component
+        switch mode {
+        case .week: unit = .weekOfYear
+        case .month: unit = .month
+        case .day: unit = .day
+        case .year: unit = .year
+        }
         if let date = calendar.date(byAdding: unit, value: value, to: selected) { select(date) }
     }
 
@@ -358,7 +380,7 @@ private struct CalendarAgendaRow: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(alignment: .top, spacing: 12) {
+            HStack(alignment: .top, spacing: 10) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(event.isAllDay ? "All day" : event.start.formatted(date: .omitted, time: .shortened))
                         .font(.subheadline.weight(.semibold)).foregroundStyle(palette.foreground)
@@ -366,23 +388,27 @@ private struct CalendarAgendaRow: View {
                         Text(event.end.formatted(date: .omitted, time: .shortened))
                             .font(.caption).foregroundStyle(palette.secondary)
                     }
-                }.monospacedDigit().frame(width: 62, alignment: .leading)
+                }.monospacedDigit().frame(width: 58, alignment: .leading)
                 RoundedRectangle(cornerRadius: 2).fill(event.color.tint).frame(width: 3)
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text(event.title).font(.body.weight(.semibold)).foregroundStyle(palette.foreground)
                         .multilineTextAlignment(.leading).lineLimit(2)
-                    if !event.location.isEmpty {
-                        Text(event.location).font(.subheadline).foregroundStyle(palette.secondary).lineLimit(1)
-                    }
-                    if conflict {
-                        Text("Overlaps").font(.caption).foregroundStyle(palette.danger)
+                    if !event.location.isEmpty || conflict {
+                        HStack(spacing: 6) {
+                            if !event.location.isEmpty {
+                                Text(event.location).foregroundStyle(palette.secondary).lineLimit(1)
+                            }
+                            if !event.location.isEmpty && conflict { Text("·").foregroundStyle(palette.secondary) }
+                            if conflict { Text("Overlaps").foregroundStyle(palette.danger).fixedSize() }
+                        }.font(.caption)
                     }
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
+            .frame(minHeight: 44, alignment: .top)
             .fixedSize(horizontal: false, vertical: true)
-            .padding(14).frame(maxWidth: .infinity, alignment: .leading)
-            .background(palette.surface, in: RoundedRectangle(cornerRadius: 18))
-            .contentShape(RoundedRectangle(cornerRadius: 18))
+            .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+            .background(palette.surface, in: RoundedRectangle(cornerRadius: 14))
+            .contentShape(RoundedRectangle(cornerRadius: 14))
         }
         .buttonStyle(.plain)
         .accessibilityHint("Edit event")
