@@ -89,9 +89,14 @@ struct TimelinePlacement: Identifiable {
             let parts = calendar.dateComponents([.hour, .minute, .second], from: time)
             return Double((parts.hour ?? 0) * 60 + (parts.minute ?? 0)) + Double(parts.second ?? 0) / 60
         }
-        let items = events.filter { !$0.isAllDay && $0.start < next && $0.end > day }
-            .map { Self(event: $0, start: minute($0.start), end: minute($0.end)) }
-            .sorted { $0.start == $1.start ? $0.end > $1.end : $0.start < $1.start }
+        let timedEvents = events.filter { !$0.isAllDay && $0.start < next && $0.end > day }
+        let unsorted: [TimelinePlacement] = timedEvents.map { event in
+            TimelinePlacement(event: event, start: minute(event.start), end: minute(event.end))
+        }
+        let items = unsorted.sorted { left, right in
+            if left.start == right.start { return left.end > right.end }
+            return left.start < right.start
+        }
         var result: [Self] = []
         var group: [Self] = []
         var groupEnd: Double = -1
