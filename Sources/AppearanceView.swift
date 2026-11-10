@@ -33,6 +33,7 @@ struct AppearanceView: View {
     @AppStorage("randomnessMode") private var randomness = "normal"
     @AppStorage("paletteRevision") private var paletteRevision = 0
     @AppStorage("launchConfetti") private var launchConfetti = true
+    @State private var soundError: String?
     @AppStorage("launchSounds") private var launchSounds = false
     @AppStorage("compactCalendar") private var compact = false
     private let accents = ["red", "teal", "blue", "purple", "orange"]
@@ -77,6 +78,10 @@ struct AppearanceView: View {
                 Section("Launch effects") {
                     Toggle("Confetti on open", isOn: $launchConfetti)
                     Toggle("Random chime on open", isOn: $launchSounds)
+                    Button("Test chime", systemImage: "speaker.wave.2.fill") { soundError = LaunchSound.play() }
+                    Text("Chimes use media volume and play even in silent mode.")
+                        .font(.caption).foregroundStyle(.secondary)
+                    if let soundError { Text(soundError).font(.caption).foregroundStyle(.red) }
                 }
                 Section("Calendar") {
                     Toggle("Compact month view", isOn: $compact)

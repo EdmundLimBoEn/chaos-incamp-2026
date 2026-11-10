@@ -49,18 +49,22 @@ struct LaunchEffectsView: View {
 }
 
 @MainActor
-private enum LaunchSound {
+enum LaunchSound {
     private static var player: AVAudioPlayer?
 
-    static func play() {
+    @discardableResult
+    static func play() -> String? {
         do {
-            try AVAudioSession.sharedInstance().setCategory(.ambient, options: .mixWithOthers)
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: .mixWithOthers)
+            try AVAudioSession.sharedInstance().setActive(true)
             let notes = [[523.25, 659.25, 783.99], [587.33, 739.99, 880], [659.25, 783.99, 987.77]].randomElement()!
             player = try AVAudioPlayer(data: chime(notes: notes))
-            player?.volume = 0.35
-            player?.play()
+            player?.volume = 0.7
+            player?.prepareToPlay()
+            guard player?.play() == true else { return "Audio playback could not start. Try again." }
+            return nil
         } catch {
-            // Launch effects must never interrupt opening the calendar.
+            return "Couldn’t play the chime: \(error.localizedDescription)"
         }
     }
 
