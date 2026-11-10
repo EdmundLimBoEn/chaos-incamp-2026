@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import WidgetKit
 
 @MainActor @Observable
 final class EventStore {
@@ -19,6 +20,7 @@ final class EventStore {
                 events = Self.samples()
                 try persist(events)
             }
+            publishWidget()
         } catch {
             canPersist = false
             errorMessage = "Your calendar could not be loaded. Existing data has been preserved. \(error.localizedDescription)"
@@ -67,9 +69,20 @@ final class EventStore {
             try persist(next)
             events = next
             errorMessage = nil
+            publishWidget()
             refreshReminders()
         } catch {
             errorMessage = "Changes could not be saved. \(error.localizedDescription)"
+        }
+    }
+
+    private func publishWidget() {
+        do {
+            try WidgetEventSnapshot.write(events)
+            WidgetCenter.shared.reloadTimelines(ofKind: WidgetEventSnapshot.kind)
+        } catch {
+            // Calendar saves remain independent of optional widget provisioning.
+            print("Widget snapshot unavailable: \(error.localizedDescription)")
         }
     }
 

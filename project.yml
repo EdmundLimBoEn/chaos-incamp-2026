@@ -17,10 +17,39 @@ targets:
   sstincky calander:
     type: application
     platform: iOS
-    sources: [Sources]
+    sources: [Sources, Shared]
+    dependencies:
+      - target: CalendarWidget
+        embed: true
+    entitlements:
+      path: Config/Calendar.entitlements
+      properties:
+        com.apple.security.application-groups: [group.systems.edmundlim.daymark]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: systems.edmundlim.daymark
+  CalendarWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - Widgets
+      - Shared
+      - Sources/CalendarEvent.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: systems.edmundlim.daymark.widget
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+        INFOPLIST_KEY_CFBundleDisplayName: sstincky calander
+    info:
+      path: Config/Widget-Info.plist
+      properties:
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: Config/Widget.entitlements
+      properties:
+        com.apple.security.application-groups: [group.systems.edmundlim.daymark]
 schemes:
   sstincky calander:
     build:
